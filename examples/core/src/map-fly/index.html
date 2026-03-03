@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>设置地图状态 - MapOrbis</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body, #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .orbis-control-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 350px;
+      z-index: 1000;
+    }
+
+    .orbis-info-value {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 12px;
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 2px 6px;
+      border-radius: 3px;
+      word-break: break-all;
+    }
+
+    .auto-update-badge {
+      font-size: 10px;
+      background-color: var(--orbis-green);
+      color: white;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 5px;
+    }
+
+    .control-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .center-control-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .height-control-buttons {
+      display: grid;
+      gap: 8px;
+      margin: 10px 0 15px 0;
+    }
+
+    .control-button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background-color: var(--orbis-blue);
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: background-color 0.2s;
+    }
+
+    .control-button:hover {
+      background-color: var(--orbis-blue-dark);
+    }
+
+    .control-button.copy {
+      background-color: var(--orbis-gray-600);
+    }
+
+    .control-button.copy:hover {
+      background-color: var(--orbis-gray-700);
+    }
+
+    .control-button.beijing {
+      background-color: #1890ff;
+    }
+
+    .control-button.beijing:hover {
+      background-color: #096dd9;
+    }
+
+    .control-button.shanghai {
+      background-color: #52c41a;
+    }
+
+    .control-button.shanghai:hover {
+      background-color: #389e0d;
+    }
+
+    .control-button.guangzhou {
+      background-color: #fa8c16;
+    }
+
+    .control-button.guangzhou:hover {
+      background-color: #d46b08;
+    }
+
+    .control-button.shenzhen {
+      background-color: #f5222d;
+    }
+
+    .control-button.shenzhen:hover {
+      background-color: #cf1322;
+    }
+
+    .control-button.low {
+      background-color: #13c2c2;
+    }
+
+    .control-button.low:hover {
+      background-color: #08979c;
+    }
+
+    .control-divider {
+      height: 1px;
+      background-color: var(--orbis-gray-300);
+      margin: 15px 0;
+      width: 100%;
+    }
+
+    .control-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--orbis-gray-700);
+    }
+
+    .control-section-title i {
+      color: var(--orbis-blue);
+    }
+
+    @media (max-width: 768px) {
+      .orbis-control-panel {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+      }
+
+      .control-buttons,
+      .center-control-buttons,
+      .height-control-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body class="orbis-body">
+  <div id="map"></div>
+
+  <div class="orbis-control-panel">
+    <div class="orbis-panel orbis-shadow-lg">
+      <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+          <i class="fas fa-map" style="color: var(--orbis-blue)"></i>
+          地图状态监控
+          <span class="auto-update-badge">自动更新</span>
+        </h3>
+        <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="orbis-panel-body">
+        <div class="orbis-info-grid">
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">中心点 (lon, lat, height)</span>
+            <span class="orbis-info-value" id="centerValue">116.4, 39.9, 2000</span>
+          </div>
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">相机高度 (m)</span>
+            <span class="orbis-info-value" id="distanceValue">10000</span>
+          </div>
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">最大高度 (m)</span>
+            <span class="orbis-info-value" id="maxDistanceValue">80000</span>
+          </div>
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">最小高度 (m)</span>
+            <span class="orbis-info-value" id="minDistanceValue">20</span>
+          </div>
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">俯仰角 Pitch</span>
+            <span class="orbis-info-value" id="pitchValue">75°</span>
+          </div>
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">方位角 Bearing</span>
+            <span class="orbis-info-value" id="bearingValue">0°</span>
+          </div>
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">投影类型</span>
+            <span class="orbis-info-value" id="projectionValue">EPSG:3857</span>
+          </div>
+        </div>
+
+        <div class="control-divider"></div>
+        <div class="control-section-title">
+          <i class="fas fa-crosshairs"></i>
+          中心点设置
+        </div>
+        <div class="center-control-buttons">
+          <button class="control-button beijing" id="setBeijingBtn" title="北京">
+            <i class="fas fa-landmark"></i>
+            北京
+          </button>
+          <button class="control-button shanghai" id="setShanghaiBtn" title="上海">
+            <i class="fas fa-building"></i>
+            上海
+          </button>
+          <button class="control-button guangzhou" id="setGuangzhouBtn" title="广州">
+            <i class="fas fa-city"></i>
+            广州
+          </button>
+          <button class="control-button shenzhen" id="setShenzhenBtn" title="深圳">
+            <i class="fas fa-sync-alt"></i>
+            深圳
+          </button>
+        </div>
+
+        <div class="control-section-title">
+          <i class="fas fa-mountain"></i>
+          相机姿态设置
+        </div>
+        <div class="height-control-buttons">
+          <button class="control-button low" id="setLowHeightBtn" title="随机的高度和角度">
+            <i class="fas fa-eye"></i>
+            随机的高度和角度
+          </button>
+        </div>
+
+        <div class="control-buttons">
+          <button class="control-button copy" id="refreshStateBtn">
+            <i class="fas fa-sync-alt"></i>
+            手动刷新
+          </button>
+          <button class="control-button" id="copyStateBtn" style="grid-column: span 2;">
+            <i class="fas fa-copy"></i>
+            复制状态
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+    let map;
+    let updateInterval = null;
+
+    const cityCoordinates = {
+      beijing: { center: [116.4, 39.9, 2000], name: "北京" },
+      shanghai: { center: [121.47, 31.23, 1500], name: "上海" },
+      guangzhou: { center: [113.26, 23.12, 1000], name: "广州" },
+      shenzhen: { center: [114.06, 22.54, 800], name: "深圳" }
+    };
+
+    createMap();
+
+    function createMap() {
+      map = new maporbis.Map("map", {
+        state: {
+          center: [116.4, 39.9, 2000],
+        },
+        source: {
+          minLevel: 2,
+          maxLevel: 19,
+          baseLayers: [
+            new maporbis.WMTSTileLayer("esri_imagery", {
+              source: new maporbis.TileSource({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                projectionID: "3857",
+              }),
+              projection: maporbis.ProjectionFactory.create("3857"),
+              opacity: 1.0,
+              visible: true,
+              altitude: 1,
+            }),
+          ],
+        },
+        renderer: {
+          stats: true,
+          antialias: true,
+          skybox: {
+            hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+            hdrExposure: 1,
+            defaultColor: "#B9D4FE",
+          },
+          minDistance: 20,
+          maxDistance: 80000,
+          defaultGround: {
+            enabled: false,
+            visible: true,
+            color: "#ff0000",
+            opacity: 1,
+          },
+        },
+        camera: {
+          pitch: 75,
+          bearing: 0,
+        },
+      });
+
+      map.on("load", () => {
+        notify("地图创建成功", "success");
+        startAutoUpdate();
+      });
+    }
+
+    function updateMapState() {
+      if (!map) return;
+
+      try {
+        const center = map.getCenter();
+        document.getElementById("centerValue").textContent =
+          `${center[0].toFixed(4)}, ${center[1].toFixed(4)}, ${center[2].toFixed(0)}`;
+
+        const distance = map._getCameraDistance();
+        document.getElementById("distanceValue").textContent = distance.toFixed(0);
+
+        const maxDistance = map.getMaxDistance();
+        const minDistance = map.getMinDistance();
+        document.getElementById("maxDistanceValue").textContent = maxDistance.toFixed(0);
+        document.getElementById("minDistanceValue").textContent = minDistance.toFixed(0);
+
+        const pitch = map.getPitch();
+        document.getElementById("pitchValue").textContent = `${pitch.toFixed(1)}°`;
+
+        const bearing = map.getBearing();
+        document.getElementById("bearingValue").textContent = `${bearing.toFixed(1)}°`;
+
+        const projection = map.getProjection();
+        document.getElementById("projectionValue").textContent =
+          projection ? projection.getID() : "未知";
+
+      } catch (error) {
+        console.error("更新地图状态失败:", error);
+      }
+    }
+
+    function startAutoUpdate() {
+      if (updateInterval) {
+        clearInterval(updateInterval);
+      }
+
+      updateMapState();
+      updateInterval = setInterval(updateMapState, 1000);
+    }
+
+    function stopAutoUpdate() {
+      if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+      }
+    }
+
+    function copyStateToClipboard() {
+      if (!map) return;
+
+      const state = {
+        center: map.getCenter(),
+        pitch: map.getPitch(),
+        bearing: map.getBearing(),
+        distance: map._getCameraDistance(),
+        minDistance: map.getMinDistance(),
+        maxDistance: map.getMaxDistance(),
+        projection: map.getProjection()?.getID(),
+        timestamp: new Date().toISOString()
+      };
+
+      const stateText = JSON.stringify(state, null, 2);
+
+      navigator.clipboard.writeText(stateText)
+        .then(() => {
+          notify("地图状态已复制到剪贴板", "success");
+        })
+        .catch(err => {
+          console.error("复制失败:", err);
+          notify("复制失败: " + err.message, "error");
+        });
+    }
+
+    document.getElementById("refreshStateBtn").addEventListener("click", () => {
+      if (map) {
+        updateMapState();
+        notify("状态已手动刷新", "info");
+      } else {
+        notify("地图未创建", "warning");
+      }
+    });
+
+    document.getElementById("copyStateBtn").addEventListener("click", copyStateToClipboard);
+
+    document.getElementById("setBeijingBtn").addEventListener("click", () => {
+      map.easeTo({ center: cityCoordinates.beijing.center });
+    });
+
+    document.getElementById("setShanghaiBtn").addEventListener("click", () => {
+      map.easeTo({ center: cityCoordinates.shanghai.center });
+    });
+
+    document.getElementById("setGuangzhouBtn").addEventListener("click", () => {
+      map.easeTo({ center: cityCoordinates.guangzhou.center });
+    });
+
+    document.getElementById("setShenzhenBtn").addEventListener("click", () => {
+      map.easeTo({ center: cityCoordinates.shenzhen.center });
+    });
+
+    document.getElementById("setLowHeightBtn").addEventListener("click", () => {
+      flyToRandom();
+    });
+
+    function getRandomFlyToParams() {
+      const randomCenter = [
+        73 + Math.random() * 53,
+        18 + Math.random() * 33
+      ];
+
+      const randomDistance = 500 + Math.random() * 49500;
+      const randomBearing = Math.random() * 360;
+      const randomPitch = Math.random() * 60;
+      const randomDuration = 1000 + Math.random() * 4000;
+
+      return {
+        center: randomCenter,
+        distance: randomDistance,
+        bearing: randomBearing,
+        pitch: randomPitch,
+        duration: randomDuration
+      };
+    }
+
+    function flyToRandom() {
+      const params = getRandomFlyToParams();
+      console.log('随机飞行参数：', params);
+
+      map.flyTo({
+        center: params.center,
+        distance: params.distance,
+        bearing: params.bearing,
+        pitch: params.pitch,
+        duration: params.duration
+      });
+    }
+
+    window.addEventListener("beforeunload", () => {
+      stopAutoUpdate();
+    });
+
+    map.on('viewchange', (e) => {
+      updateMapState();
+    });
+  </script>
+</body>
+</html>

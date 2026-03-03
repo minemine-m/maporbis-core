@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>面要素样式演示 - MapOrbis</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body, #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .orbis-control-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 320px;
+      z-index: 1000;
+    }
+
+    .control-section {
+      margin-bottom: 15px;
+    }
+
+    .control-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--orbis-text-secondary);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .color-btn {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .color-btn.active {
+      border-color: var(--orbis-text-primary);
+    }
+
+    .mode-btn-group {
+      display: flex;
+      gap: 5px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 12px;
+      border: 1px solid var(--orbis-gray-3);
+      background: var(--orbis-bg-primary);
+      color: var(--orbis-text-primary);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:hover {
+      background: var(--orbis-bg-secondary);
+    }
+
+    .mode-btn.active {
+      background: var(--orbis-blue);
+      color: white;
+      border-color: var(--orbis-blue);
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-container input {
+      flex: 1;
+    }
+
+    .value-display {
+      font-family: monospace;
+      font-size: 12px;
+      width: 40px;
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body class="orbis-body">
+  <div id="map"></div>
+
+  <div class="orbis-control-panel">
+    <div class="orbis-panel orbis-shadow-lg">
+      <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+          <i class="fas fa-layer-group" style="color: var(--orbis-blue)"></i>
+          面要素样式演示
+        </h3>
+        <button class="orbis-toggle" id="themeToggle"></button>
+      </div>
+
+      <div class="orbis-panel-body">
+        <div class="control-section">
+          <div class="control-label">渲染模式</div>
+          <div class="mode-btn-group" id="modeGroup">
+            <button class="mode-btn active" onclick="setMode('fill')">填充</button>
+            <button class="mode-btn" onclick="setMode('extrusion')">立体</button>
+            <button class="mode-btn" onclick="setMode('water')">水面</button>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <div class="control-label">颜色</div>
+          <div class="color-grid" id="colorGroup">
+            <button class="color-btn active" style="background: #82D8F7" onclick="setColor('#82D8F7', this)"></button>
+            <button class="color-btn" style="background: #34C759" onclick="setColor('#34C759', this)"></button>
+            <button class="color-btn" style="background: #FF3B30" onclick="setColor('#FF3B30', this)"></button>
+            <button class="color-btn" style="background: #FF9500" onclick="setColor('#FF9500', this)"></button>
+            <button class="color-btn" style="background: #AF52DE" onclick="setColor('#AF52DE', this)"></button>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <div class="control-label">
+            透明度
+            <span class="value-display" id="opacityVal">0.8</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" min="0" max="1" step="0.1" value="0.8" oninput="setOpacity(this.value)">
+          </div>
+        </div>
+
+        <div class="control-section" id="borderControl">
+          <div class="control-label">
+            边框宽度
+            <span class="value-display" id="borderVal">0</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" min="0" max="10" step="1" value="0" oninput="setBorder(this.value)">
+          </div>
+        </div>
+
+        <div class="control-section" id="heightControl" style="display: none;">
+          <div class="control-label">
+            拉伸高度
+            <span class="value-display" id="heightVal">500</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" min="100" max="5000" step="100" value="500" oninput="setHeight(this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+
+    let map, polygonLayer, currentPolygon;
+
+    const state = {
+      mode: 'fill',
+      color: '#82D8F7',
+      opacity: 0.8,
+      borderWidth: 0,
+      height: 500
+    };
+
+    const coords = [
+      [116.390, 39.920],
+      [116.405, 39.920],
+      [116.405, 39.910],
+      [116.390, 39.910],
+      [116.390, 39.920]
+    ];
+
+    init();
+
+    function init() {
+      map = new maporbis.Map("map", {
+        state: {
+          center: [116.3975, 39.915, 8000],
+        },
+        source: {
+          baseLayers: [
+            new maporbis.WMTSTileLayer("esri_imagery", {
+              source: new maporbis.TileSource({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                projectionID: "3857",
+              }),
+              projection: maporbis.ProjectionFactory.create("3857"),
+              minLevel: 2,
+              maxLevel: 18,
+            }),
+          ],
+        },
+        renderer: {
+            skybox: {
+                hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+                hdrExposure: 1,
+                defaultColor: "#B9D4FE",
+            }
+        }
+      });
+
+      map.on("load", () => {
+        polygonLayer = new maporbis.PolygonLayer("demo-layer", {altitude: 1});
+        map.addLayer(polygonLayer);
+        updatePolygon();
+        notify("地图加载完成", "success");
+      });
+    }
+
+    function updatePolygon() {
+      if (!map || !polygonLayer) return;
+
+      polygonLayer.clear();
+
+      let paint = {};
+
+      switch (state.mode) {
+        case 'fill':
+          paint = {
+            type: 'fill',
+            color: state.color,
+            opacity: state.opacity,
+            borderWidth: state.borderWidth,
+            borderColor: '#FFFFFF',
+            transparent: state.opacity < 1
+          };
+          break;
+        case 'extrusion':
+          paint = {
+            type: 'extrusion',
+            color: state.color,
+            opacity: state.opacity,
+            extrude: {
+              height: state.height
+            },
+            transparent: state.opacity < 1
+          };
+          break;
+        case 'water':
+          paint = {
+            type: 'water-highlight',
+            color: state.color,
+            opacity: state.opacity,
+            normalMap: '/assets/image/waternormals.jpg'
+          };
+          break;
+      }
+
+      try {
+        currentPolygon = new maporbis.Polygon({
+          geometry: {
+            type: 'Polygon',
+            coordinates: [coords]
+          },
+          paint: paint
+        });
+
+        currentPolygon.addTo(polygonLayer);
+      } catch (e) {
+        console.error(e);
+        notify("样式应用失败", "error");
+      }
+    }
+
+    window.setMode = (mode) => {
+      state.mode = mode;
+
+      document.querySelectorAll('#modeGroup .mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(
+          mode === 'fill' ? '填充' : mode === 'extrusion' ? '立体' : '水面'
+        ));
+      });
+
+      document.getElementById('borderControl').style.display = mode === 'fill' ? 'block' : 'none';
+      document.getElementById('heightControl').style.display = mode === 'extrusion' ? 'block' : 'none';
+
+      updatePolygon();
+    };
+
+    window.setColor = (color, btn) => {
+      state.color = color;
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updatePolygon();
+    };
+
+    window.setOpacity = (val) => {
+      state.opacity = parseFloat(val);
+      document.getElementById('opacityVal').textContent = val;
+      updatePolygon();
+    };
+
+    window.setBorder = (val) => {
+      state.borderWidth = parseInt(val);
+      document.getElementById('borderVal').textContent = val;
+      updatePolygon();
+    };
+
+    window.setHeight = (val) => {
+      state.height = parseInt(val);
+      document.getElementById('heightVal').textContent = val;
+      updatePolygon();
+    };
+  </script>
+</body>
+</html>

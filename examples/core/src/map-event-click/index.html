@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>鼠标点击获取经纬度 - MapOrbis</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body, #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .orbis-control-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 350px;
+      z-index: 1000;
+    }
+
+    .orbis-info-value {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 12px;
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 2px 6px;
+      border-radius: 3px;
+      word-break: break-all;
+    }
+
+    .auto-update-badge {
+      font-size: 10px;
+      background-color: var(--orbis-green);
+      color: white;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 5px;
+    }
+
+    @media (max-width: 768px) {
+      .orbis-control-panel {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body class="orbis-body">
+  <div id="map"></div>
+
+  <div class="orbis-control-panel">
+    <div class="orbis-panel orbis-shadow-lg">
+      <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+          <i class="fas fa-map" style="color: var(--orbis-blue)"></i>
+          地图点击事件
+          <span class="auto-update-badge">点击地图</span>
+        </h3>
+        <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="orbis-panel-body">
+        <div class="orbis-info-grid">
+          <div class="orbis-info-item">
+            <span class="orbis-info-label">鼠标点击位置 (lon, lat)</span>
+            <span class="orbis-info-value" id="centerValue">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+    let map;
+
+    createMap();
+
+    function createMap() {
+      map = new maporbis.Map("map", {
+        state: {
+          center: [116.4, 39.9, 2000],
+        },
+        source: {
+          minLevel: 2,
+          maxLevel: 19,
+          baseLayers: [
+            new maporbis.WMTSTileLayer("esri_imagery", {
+              source: new maporbis.TileSource({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                projectionID: "3857",
+              }),
+              projection: maporbis.ProjectionFactory.create("3857"),
+              opacity: 1.0,
+              visible: true,
+              altitude: 1,
+            }),
+          ],
+        },
+        renderer: {
+          stats: true,
+          antialias: true,
+          skybox: {
+            hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+            hdrExposure: 1,
+            defaultColor: "#B9D4FE",
+          },
+          minDistance: 20,
+          maxDistance: 80000,
+          defaultGround: {
+            enabled: false,
+            visible: true,
+            color: "#ff0000",
+            opacity: 1,
+          },
+        },
+        camera: {
+          pitch: 75,
+          bearing: 0,
+        },
+      });
+
+      map.on("load", () => {
+        notify("地图创建成功，点击地图获取坐标", "success");
+      });
+    }
+
+    function updateMapState(e) {
+      if (!map) return;
+
+      try {
+        const center = e.coordinate;
+        document.getElementById("centerValue").textContent =
+          `${center[0].toFixed(4)}, ${center[1].toFixed(4)}`;
+        notify(`点击坐标: ${center[0].toFixed(4)}, ${center[1].toFixed(4)}`, "info");
+      } catch (error) {
+        console.error("更新地图状态失败:", error);
+      }
+    }
+
+    map.on('click', (e) => {
+      console.log('click', e);
+      updateMapState(e);
+    });
+  </script>
+</body>
+</html>

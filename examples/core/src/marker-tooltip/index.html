@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>设置点标注的文本标签 - MapOrbis</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body, #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .demo-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body class="orbis-body">
+  <div id="map"></div>
+
+  <div class="demo-panel">
+    <div class="orbis-panel orbis-shadow-lg">
+      <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+          <i class="fas fa-tag" style="color: var(--orbis-blue)"></i>
+          标注提示
+        </h3>
+        <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+      <div class="orbis-panel-body">
+        <div class="orbis-info-grid">
+          <div class="orbis-info-item">
+            <div class="orbis-info-label">ToolTip 数量</div>
+            <div class="orbis-info-value">4</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+
+    const map = new maporbis.Map("map", {
+      state: {
+        center: [116.4, 39.9, 2000],
+      },
+      source: {
+        minLevel: 2,
+        maxLevel: 19,
+        baseLayers: [
+          new maporbis.WMTSTileLayer("esri_imagery", {
+            source: new maporbis.TileSource({
+              url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              projectionID: "3857",
+            }),
+            projection: maporbis.ProjectionFactory.create("3857"),
+            opacity: 1.0,
+            visible: true,
+            altitude: 1,
+          }),
+        ],
+      },
+      renderer: {
+        stats: true,
+        antialias: true,
+        skybox: {
+          hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+          hdrExposure: 1,
+          defaultColor: "#B9D4FE",
+        },
+        minDistance: 20,
+        maxDistance: 80000,
+        defaultGround: {
+          enabled: false,
+          visible: true,
+          color: "#ff0000",
+          opacity: 1,
+        },
+      },
+      camera: {
+        pitch: 60,
+        bearing: 0,
+      },
+    });
+
+    map.on("load", () => {
+      notify("地图加载完成，正在添加 ToolTip", "info");
+
+      const point = new maporbis.Marker({
+        geometry: {
+          type: "Point",
+          coordinates: [116.4, 39.9, 50],
+        },
+        paint: {
+          type: "icon",
+          url: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png",
+          size: 32,
+          sizeAttenuation: false,
+          anchor: 'bottom',
+        },
+      });
+
+      point.setToolTip({
+        content: "hello maporbis (-0.1, -1.5)",
+        showTimeout: 0,
+        persistent: true,
+        anchor: [-0.1, -1.5],
+      });
+
+      const Layer = new maporbis.PointLayer("labels", {
+        altitude: 1,
+      });
+
+      map.addLayer(Layer);
+      point.addTo(Layer);
+      point.openToolTip();
+
+      const standaloneToolTip = new maporbis.ToolTip({
+        content: "Standalone ToolTip at Shanghai",
+        coordinate: [121.5, 31.2, 50],
+        persistent: true,
+        anchor: 'bottom',
+        containerClass: 'custom-tooltip-style',
+      });
+
+      standaloneToolTip.addTo(map);
+
+      const point2 = new maporbis.Marker({
+        geometry: {
+          type: "Point",
+          coordinates: [116.5, 39.95, 50],
+        },
+        paint: {
+          type: "icon",
+          url: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png",
+          size: 32,
+          sizeAttenuation: false,
+          anchor: 'center',
+        },
+      });
+
+      point2.setToolTip({
+        content: "Left-anchored ToolTip",
+        showTimeout: 0,
+        persistent: true,
+        anchor: 'left',
+      });
+
+      point2.addTo(Layer);
+      point2.openToolTip();
+
+      const point3 = new maporbis.Marker({
+        geometry: {
+          type: "Point",
+          coordinates: [116.35, 39.85, 50],
+        },
+        paint: {
+          type: "icon",
+          url: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png",
+          size: 32,
+          sizeAttenuation: false,
+          anchor: [0.25, 0.75],
+        },
+      });
+
+      point3.setToolTip({
+        content: "Custom numeric anchor [0.25, 0.75]",
+        showTimeout: 0,
+        persistent: true,
+        anchor: [0.8, 0.2],
+      });
+
+      point3.addTo(Layer);
+      point3.openToolTip();
+
+      setTimeout(() => {
+        standaloneToolTip.setCoordinate([121.6, 31.3, 50]);
+        standaloneToolTip.setContent("ToolTip moved to new position!");
+      }, 3000);
+    });
+  </script>
+</body>
+</html>

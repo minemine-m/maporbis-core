@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+    <title>添加覆盖物 - MapOrbis</title>
+    <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      html, body, #container {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .orbis-control-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 300px;
+        z-index: 1000;
+      }
+
+      .orbis-btn {
+        flex: 1;
+      }
+
+      .orbis-btn-row {
+        display: flex;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body class="orbis-body">
+    <div id="container"></div>
+
+    <div class="orbis-control-panel">
+      <div class="orbis-panel orbis-shadow-lg">
+        <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="flex: 1;">
+            <h3 style="margin: 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-map-marker-alt" style="color: var(--orbis-blue)"></i>
+              添加覆盖物
+            </h3>
+            <p style="font-size: 12px; color: var(--orbis-gray-6); margin: 2px 0 0 0;">添加和管理地图覆盖物</p>
+          </div>
+          <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+
+        <div class="orbis-panel-body">
+          <div style="margin-bottom: 16px;">
+            <div class="orbis-btn-row">
+              <button class="orbis-btn orbis-btn-primary" id="addOneOverlay">
+                <i class="fas fa-plus"></i>
+                添加一个
+              </button>
+              <button class="orbis-btn orbis-btn-secondary" id="addSeveralOverlay">
+                <i class="fas fa-layer-group"></i>
+                添加多个
+              </button>
+            </div>
+          </div>
+
+          <div class="orbis-status-card">
+            <div class="orbis-status-title">状态</div>
+            <div class="orbis-status-indicator" style="margin-bottom: 12px;">
+              <span class="orbis-indicator" id="statusIndicator"></span>
+              <div class="orbis-status-content" id="statusText">无覆盖物</div>
+            </div>
+            <div class="orbis-info-grid">
+              <div class="orbis-info-item">
+                <div class="orbis-info-label">覆盖物数量</div>
+                <div class="orbis-info-value" id="overlayCount">0</div>
+              </div>
+              <div class="orbis-info-item">
+                <div class="orbis-info-label">最后操作</div>
+                <div class="orbis-info-value" id="lastOperation">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+        }
+      }
+    </script>
+
+    <script src="/utils/inline-utils.js"></script>
+
+    <script type="module">
+      import * as maporbis from "@maporbis/core";
+
+      var map = new maporbis.Map("container", {
+        state: {
+          center: [116.4, 39.9, 20000],
+        },
+        source: {
+          minLevel: 2,
+          maxLevel: 19,
+          baseLayers: [
+            new maporbis.WMTSTileLayer("esri_imagery", {
+              source: new maporbis.TileSource({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                projectionID: "3857",
+              }),
+              projection: maporbis.ProjectionFactory.create("3857"),
+              opacity: 1.0,
+              visible: true,
+              altitude: 1,
+            }),
+          ],
+        },
+        renderer: {
+          stats: true,
+          antialias: true,
+          skybox: {
+            hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+            hdrExposure: 1,
+            defaultColor: "#B9D4FE",
+          },
+          minDistance: 20,
+          maxDistance: 80000,
+          defaultGround: {
+            enabled: false,
+            visible: true,
+            color: "#ff0000",
+            opacity: 1,
+          },
+        },
+        camera: {
+          pitch: 75,
+          bearing: 0,
+        },
+      });
+
+      const point = new maporbis.Marker({
+        geometry: {
+          type: "Point",
+          coordinates: [116.4, 39.9],
+        },
+        paint: {
+          type: "icon",
+          url: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png",
+          size: 32,
+          sizeAttenuation: false,
+          transparent: true,
+          anchor: [0.5, 0],
+        },
+      });
+
+      var polyline = new maporbis.LineString({
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [116.41, 39.93],
+            [116.43, 39.91],
+          ],
+        },
+        paint: {
+          type: "line",
+          color: "#ff0000",
+          width: 5,
+          opacity: 1,
+        },
+      });
+
+      var polygon = new maporbis.Polygon({
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [116.46, 39.93],
+              [116.44, 39.91],
+              [116.49, 39.91],
+              [116.46, 39.93],
+            ],
+          ],
+        },
+        paint: {
+          type: "fill",
+          color: "#ff0000",
+          opacity: 0.5,
+        },
+      });
+
+      var markerlayer = new maporbis.PointLayer("markers", { altitude: 0 });
+      var polylinelayer = new maporbis.LineLayer("polylines", { altitude: 5 });
+      var polygonlayer = new maporbis.PolygonLayer("polygons", { altitude: 1 });
+
+      map.addLayer([markerlayer, polylinelayer, polygonlayer]);
+
+      let overlayCount = 0;
+
+      function updateStatus() {
+        const statusIndicator = document.getElementById("statusIndicator");
+        const statusText = document.getElementById("statusText");
+        const overlayCountEl = document.getElementById("overlayCount");
+
+        if (overlayCount > 0) {
+          statusIndicator.className = "orbis-indicator orbis-indicator-active";
+          statusText.textContent = "已添加覆盖物";
+        } else {
+          statusIndicator.className = "orbis-indicator";
+          statusText.textContent = "无覆盖物";
+        }
+
+        overlayCountEl.textContent = overlayCount;
+      }
+
+      document.getElementById("addOneOverlay").onclick = function () {
+        try {
+          point.addTo(markerlayer);
+          overlayCount++;
+          document.getElementById("lastOperation").textContent = "添加点覆盖物";
+          updateStatus();
+          notify("点覆盖物添加成功", "success");
+        } catch (error) {
+          console.error(error);
+          notify("添加失败: " + error.message, "error");
+        }
+      };
+
+      document.getElementById("addSeveralOverlay").onclick = function () {
+        try {
+          polyline.addTo(polylinelayer);
+          polygon.addTo(polygonlayer);
+          overlayCount += 2;
+          document.getElementById("lastOperation").textContent = "添加线和面覆盖物";
+          updateStatus();
+          notify("线和面覆盖物添加成功", "success");
+        } catch (error) {
+          console.error(error);
+          notify("添加失败: " + error.message, "error");
+        }
+      };
+    </script>
+  </body>
+</html>

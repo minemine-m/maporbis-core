@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MapOrbis Core Examples</title>
+  <link rel="stylesheet" href="../shared/styles/orbisstyle.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 40px;
+    }
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .example-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .example-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .example-card h3 {
+      margin: 0 0 10px 0;
+      color: #1a73e8;
+    }
+    .example-card p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+    .category {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MapOrbis Core Examples</h1>
+  <div class="examples-grid" id="examples"></div>
+
+  <script type="module">
+    const examples = [
+      { name: 'basemap', title: '基础地图', desc: '最简单的地图初始化', category: '基础' },
+      { name: 'circle-marker', title: '圆形标记', desc: '添加圆形标记点', category: '基础' },
+      { name: 'label-text', title: '文本标签', desc: 'Canvas 文本标签显示', category: '基础' },
+      { name: 'feature-line', title: '线要素样式', desc: '实线、虚线、流光、箭头效果', category: '要素' },
+      { name: 'feature-polygon', title: '面要素样式', desc: '填充、立体拉伸、水面效果', category: '要素' },
+      { name: 'feature-add', title: '添加覆盖物', desc: '动态添加点线面要素', category: '要素' },
+      { name: 'feature-clear', title: '清除覆盖物', desc: '清除地图要素', category: '要素' },
+      { name: 'map-event-click', title: '点击事件', desc: '获取点击坐标', category: '交互' },
+      { name: 'map-status', title: '状态监控', desc: '实时监控地图状态', category: '交互' },
+      { name: 'map-fly', title: '飞行动画', desc: '相机动画移动', category: '交互' },
+      { name: 'map-destory', title: '地图销毁', desc: '地图生命周期管理', category: '交互' },
+      { name: 'icon-marker', title: '图标标记', desc: '自定义图标标记', category: '标记' },
+      { name: 'marker-anchor', title: '标记锚点', desc: '标记锚点位置控制', category: '标记' },
+      { name: 'marker-tooltip', title: '标记提示', desc: 'ToolTip 提示框', category: '标记' },
+      { name: 'feature-edit-point', title: '点位编辑', desc: '点标记拖拽编辑', category: '编辑' },
+      { name: 'feature-edit-line', title: '折线编辑', desc: '折线节点编辑', category: '编辑' },
+      { name: 'feature-edit-polygon', title: '多边形编辑', desc: '多边形节点编辑', category: '编辑' }
+    ];
+
+    const container = document.getElementById('examples');
+    examples.forEach(ex => {
+      const card = document.createElement('div');
+      card.className = 'example-card';
+      card.innerHTML = `
+        <div class="category">${ex.category}</div>
+        <h3>${ex.title}</h3>
+        <p>${ex.desc}</p>
+      `;
+      card.onclick = () => window.location.href = `./src/${ex.name}/index.html`;
+      container.appendChild(card);
+    });
+  </script>
+</body>
+</html>

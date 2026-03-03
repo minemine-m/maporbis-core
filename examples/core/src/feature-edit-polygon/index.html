@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+  <title>多边形的绘制和编辑 - MapOrbis</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body, #container { width: 100%; height: 100%; margin: 0; padding: 0; }
+
+    .demo-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body class="orbis-body">
+  <div id="container"></div>
+  <div class="demo-panel">
+    <div class="orbis-panel orbis-shadow-lg">
+      <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+          <i class="fas fa-draw-polygon" style="color: var(--orbis-blue)"></i>
+          多边形编辑
+        </h3>
+        <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+      <div class="orbis-panel-body">
+        <div style="margin-bottom: 12px;">
+          <button class="orbis-btn orbis-btn-primary" id="btnEdit1" style="width: 100%; margin-bottom: 8px;">
+            <i class="fas fa-edit"></i> 编辑多边形 1
+          </button>
+          <button class="orbis-btn orbis-btn-primary" id="btnEdit2" style="width: 100%; margin-bottom: 8px;">
+            <i class="fas fa-edit"></i> 编辑多边形 2
+          </button>
+          <button class="orbis-btn orbis-btn-danger" id="btnEnd" disabled style="width: 100%;">
+            <i class="fas fa-lock"></i> 结束编辑
+          </button>
+        </div>
+        <div class="orbis-status-card">
+          <div class="orbis-status-indicator">
+            <span class="orbis-indicator" id="statusIndicator"></span>
+            <div class="orbis-status-content" id="statusLabel">预览模式</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+
+    const map = new maporbis.Map("container", {
+      state: { center: [116.425, 39.905, 5000000] },
+      source: {
+        baseLayers: [
+          new maporbis.WMTSTileLayer("esri_imagery", {
+            source: new maporbis.TileSource({
+              url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              projectionID: "3857",
+            }),
+            projection: maporbis.ProjectionFactory.create("3857"),
+          }),
+        ],
+      },
+    });
+
+    const polygonLayer = new maporbis.PolygonLayer("polygons", { altitude: 1 });
+    map.addLayer(polygonLayer);
+
+    let currentEditingTarget = null;
+
+    const createPolygon = (coords, color) => {
+      const poly = new maporbis.Polygon({
+        geometry: { type: "Polygon", coordinates: [coords] },
+        paint: { type: "fill", color: color, opacity: 0.7 },
+        editable: true,
+      });
+      poly.addTo(polygonLayer);
+      return poly;
+    };
+
+    const poly1 = createPolygon([
+      [116.403, 39.920], [116.410, 39.897], [116.402, 39.892], [116.389, 39.891]
+    ], "#1890FF");
+
+    const poly2 = createPolygon([
+      [116.453, 39.920], [116.460, 39.897], [116.452, 39.892], [116.439, 39.891]
+    ], "#52c41a");
+
+    const btnEdit1 = document.getElementById("btnEdit1");
+    const btnEdit2 = document.getElementById("btnEdit2");
+    const btnEnd = document.getElementById("btnEnd");
+    const statusLabel = document.getElementById("statusLabel");
+
+    const updateUI = (isEditing, name = "") => {
+      btnEdit1.disabled = isEditing;
+      btnEdit2.disabled = isEditing;
+      btnEnd.disabled = !isEditing;
+      statusLabel.textContent = isEditing ? `正在编辑：${name}` : "预览模式";
+
+      const indicator = document.getElementById("statusIndicator");
+      if (isEditing) {
+        indicator.className = "orbis-indicator orbis-indicator-active";
+      } else {
+        indicator.className = "orbis-indicator";
+      }
+    };
+
+    const startEdit = (target, name) => {
+      if (currentEditingTarget) currentEditingTarget.endEdit();
+
+      currentEditingTarget = target;
+      target.startEdit({
+        handleSize: 10,
+        handleColor: "#ffffff",
+        showMiddleHandles: true,
+      });
+      updateUI(true, name);
+      notify(`开始编辑：${name}`, "info");
+    };
+
+    const endEdit = () => {
+      if (currentEditingTarget) {
+        currentEditingTarget.endEdit();
+        currentEditingTarget = null;
+        notify("已结束编辑", "success");
+      } else {
+        notify("当前没有正在编辑的多边形", "warning");
+      }
+      updateUI(false);
+    };
+
+    btnEdit1.addEventListener("click", () => startEdit(poly1, "多边形 1"));
+    btnEdit2.addEventListener("click", () => startEdit(poly2, "多边形 2"));
+    btnEnd.addEventListener("click", endEdit);
+
+    notify("多边形编辑示例已加载", "success");
+  </script>
+</body>
+</html>

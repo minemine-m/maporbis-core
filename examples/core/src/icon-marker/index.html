@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+  <title>地图标记 - MapOrbis</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #container {
+      height: 100%;
+      width: 100%;
+    }
+
+    .map-control-panel {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 240px;
+      z-index: 1000;
+    }
+
+    .map-control-panel .orbis-panel-header {
+      position: relative;
+      padding-right: 60px;
+    }
+
+    .map-control-panel .orbis-toggle {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+    }
+  </style>
+</head>
+<body class="orbis-body">
+  <div id="container"></div>
+
+  <div class="map-control-panel">
+    <div class="orbis-panel">
+      <div class="orbis-panel-header">
+        <h3 style="font-size: 15px; margin: 0 0 3px 0">
+          <i class="fas fa-map-marker-alt" style="color: var(--orbis-blue)"></i>
+          地图标记
+        </h3>
+        <p style="font-size: 12px; color: var(--orbis-gray-6); margin: 0">
+          标记控制面板
+        </p>
+        <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="orbis-panel-body">
+        <div style="margin-bottom: 12px;">
+          <button class="orbis-btn orbis-btn-sm orbis-btn-primary" onclick="addMarker()" style="width: 100%; margin-bottom: 8px;">
+            <i class="fas fa-plus"></i> 添加
+          </button>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <button class="orbis-btn orbis-btn-sm orbis-btn-success" onclick="updateIcon()" id="updateIconBtn" disabled style="flex: 1;">
+              <i class="fas fa-brush"></i> 样式
+            </button>
+            <button class="orbis-btn orbis-btn-sm orbis-btn-secondary" onclick="updateContent()" id="updateContentBtn" disabled style="flex: 1;">
+              <i class="fas fa-edit"></i> 内容
+            </button>
+          </div>
+
+          <button class="orbis-btn orbis-btn-sm orbis-btn-danger" onclick="clearMarker()" id="clearMarkerBtn" style="width: 100%;">
+            <i class="fas fa-trash"></i> 删除
+          </button>
+        </div>
+
+        <div class="orbis-status-card">
+          <div class="orbis-status-title">状态</div>
+          <div class="orbis-status-indicator" style="margin-bottom: 8px;">
+            <span class="orbis-indicator" id="statusIndicator"></span>
+            <div class="orbis-status-content" id="statusText">无标记</div>
+          </div>
+          <div class="orbis-info-grid">
+            <div class="orbis-info-item">
+              <div class="orbis-info-label">位置</div>
+              <div class="orbis-info-value" id="positionInfo">--</div>
+            </div>
+            <div class="orbis-info-item">
+              <div class="orbis-info-label">样式</div>
+              <div class="orbis-info-value" id="styleInfo">默认</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+    var marker, map, layer;
+    let markerAdded = false;
+    let markerUpdated = false;
+
+    function initMap() {
+      try {
+        map = new maporbis.Map("container", {
+          state: {
+            center: [116.4, 39.9, 2000],
+          },
+          source: {
+            minLevel: 2,
+            maxLevel: 19,
+            baseLayers: [
+              new maporbis.WMTSTileLayer("esri_imagery", {
+                source: new maporbis.TileSource({
+                  url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                  projectionID: "3857",
+                }),
+                projection: maporbis.ProjectionFactory.create("3857"),
+                opacity: 1.0,
+                visible: true,
+                altitude: 1,
+              }),
+            ],
+          },
+          renderer: {
+            stats: true,
+            antialias: true,
+            skybox: {
+              hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+              hdrExposure: 1,
+              defaultColor: "#B9D4FE",
+            },
+            minDistance: 20,
+            maxDistance: 80000,
+            defaultGround: {
+              enabled: false,
+              visible: true,
+              color: "#ff0000",
+              opacity: 1,
+            },
+          },
+          camera: {
+            pitch: 75,
+            bearing: 0,
+          },
+        });
+        updateStatus();
+        map.on("load", () => {
+          notify('地图加载完成，点击"添加"开始使用', "info");
+        });
+      } catch (error) {
+        console.error("地图初始化失败:", error);
+        notify("地图初始化失败: " + error.message, "error");
+      }
+    }
+
+    function initlayer() {
+      layer = new maporbis.PointLayer("markers", { altitude: 1 });
+      map.addLayer(layer);
+    }
+
+    function updateStatus() {
+      const statusIndicator = document.getElementById("statusIndicator");
+      const statusText = document.getElementById("statusText");
+      const positionInfo = document.getElementById("positionInfo");
+      const styleInfo = document.getElementById("styleInfo");
+      const updateIconBtn = document.getElementById("updateIconBtn");
+      const updateContentBtn = document.getElementById("updateContentBtn");
+
+      if (markerAdded && marker) {
+        statusIndicator.className = "orbis-indicator orbis-indicator-active";
+        statusText.textContent = "标记已添加";
+
+        const position = marker.getCenter();
+        if (position) {
+          positionInfo.textContent = `${position[0].toFixed(6)}, ${position[1].toFixed(6)}`;
+        } else {
+          positionInfo.textContent = markerUpdated ? "116.391467, 39.927761" : "116.406315, 39.908775";
+        }
+
+        styleInfo.textContent = markerUpdated ? "已更新" : "默认";
+
+        updateIconBtn.disabled = false;
+        updateContentBtn.disabled = false;
+      } else {
+        statusIndicator.className = "orbis-indicator";
+        statusText.textContent = "无标记";
+        positionInfo.textContent = "--";
+        styleInfo.textContent = "默认";
+
+        updateIconBtn.disabled = true;
+        updateContentBtn.disabled = true;
+      }
+    }
+
+    window.addMarker = function () {
+      if (!marker) {
+        marker = new maporbis.Marker({
+          geometry: {
+            type: "Point",
+            coordinates: [116.4, 39.9],
+          },
+          paint: {
+            type: "icon",
+            url: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png",
+            size: 32,
+            sizeAttenuation: false,
+            anchor: 'bottom-left',
+          },
+        });
+
+        marker.addTo(layer);
+        markerAdded = true;
+
+        notify("标记添加成功", "success");
+        updateStatus();
+      } else {
+        notify("标记已存在", "info");
+      }
+    };
+
+    window.updateIcon = function () {
+      if (marker) {
+        marker.setPaint({
+          type: "icon",
+          url: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png",
+          size: 48,
+          sizeAttenuation: false,
+          color: "#00ff00",
+        });
+
+        notify("标记样式已更新", "success");
+        updateStatus();
+      } else {
+        notify("请先添加标记", "warning");
+      }
+    };
+
+    window.updateContent = function () {
+      if (marker) {
+        marker.setCoordinates([116.391467, 39.927761]);
+        map.easeTo({ center: [116.391467, 39.927761], duration: 500 });
+        markerUpdated = true;
+
+        notify("标记位置已更新", "success");
+        updateStatus();
+      } else {
+        notify("请先添加标记", "warning");
+      }
+    };
+
+    window.clearMarker = function () {
+      if (marker) {
+        marker._remove();
+        marker = null;
+        markerAdded = false;
+        markerUpdated = false;
+
+        notify("标记已删除", "info");
+        updateStatus();
+      } else {
+        notify("没有可删除的标记", "warning");
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(initMap, 100);
+      setTimeout(initlayer, 200);
+    });
+  </script>
+</body>
+</html>

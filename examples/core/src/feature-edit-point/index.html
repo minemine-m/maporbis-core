@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+  <title>点位标记的编辑 - MapOrbis</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body, #container { width: 100%; height: 100%; margin: 0; padding: 0; }
+
+    .demo-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body class="orbis-body">
+  <div id="container"></div>
+  <div class="demo-panel">
+    <div class="orbis-panel orbis-shadow-lg">
+      <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+          <i class="fas fa-edit" style="color: var(--orbis-blue)"></i>
+          点位编辑
+        </h3>
+        <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+      <div class="orbis-panel-body">
+        <div style="margin-bottom: 12px;">
+          <button class="orbis-btn orbis-btn-primary" id="btnEdit1" style="width: 100%; margin-bottom: 8px;">
+            <i class="fas fa-arrows-alt"></i>
+            移动点 A
+          </button>
+          <button class="orbis-btn orbis-btn-primary" id="btnEdit2" style="width: 100%; margin-bottom: 8px;">
+            <i class="fas fa-arrows-alt"></i>
+            移动点 B
+          </button>
+          <button class="orbis-btn orbis-btn-secondary" id="btnEnd" disabled style="width: 100%;">
+            <i class="fas fa-lock"></i>
+            锁定位置
+          </button>
+        </div>
+        <div class="orbis-status-card">
+          <div class="orbis-status-title">当前状态</div>
+          <div class="orbis-status-indicator">
+            <span class="orbis-indicator" id="statusIndicator"></span>
+            <div class="orbis-status-content" id="statusLabel">预览模式</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+
+    const map = new maporbis.Map("container", {
+      state: { center: [116.4, 39.9, 1000000] },
+      source: {
+        baseLayers: [
+          new maporbis.WMTSTileLayer("esri_imagery", {
+            source: new maporbis.TileSource({
+              url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              projectionID: "3857",
+            }),
+            projection: maporbis.ProjectionFactory.create("3857"),
+          }),
+        ],
+      },
+    });
+
+    const markerLayer = new maporbis.PointLayer("markers", { altitude: 5 });
+    map.addLayer(markerLayer);
+
+    let currentEditingMarker = null;
+
+    const createPoint = (lng, lat) => {
+      const marker = new maporbis.Marker({
+        geometry: { type: "Point", coordinates: [lng, lat] },
+        paint: {
+          type: "icon",
+          url: "https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png",
+          size: 32,
+          sizeAttenuation: false,
+          anchor: 'bottom',
+        },
+        editable: true,
+      });
+      marker.addTo(markerLayer);
+      return marker;
+    };
+
+    const pointA = createPoint(116.38, 39.91);
+    const pointB = createPoint(116.42, 39.91);
+
+    const btnEdit1 = document.getElementById("btnEdit1");
+    const btnEdit2 = document.getElementById("btnEdit2");
+    const btnEnd = document.getElementById("btnEnd");
+    const statusLabel = document.getElementById("statusLabel");
+    const statusIndicator = document.getElementById("statusIndicator");
+
+    const handleDrag = (e) => {
+      const coords = e.target.getGeometry().coordinates;
+      notify(`坐标: ${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`, "info", 1000);
+    };
+
+    const updateUI = (isEditing, name = "") => {
+      btnEdit1.disabled = isEditing;
+      btnEdit2.disabled = isEditing;
+      btnEnd.disabled = !isEditing;
+      statusLabel.textContent = isEditing ? `正在移动：${name}` : "预览模式";
+      statusIndicator.className = isEditing ? "orbis-indicator orbis-indicator-active" : "orbis-indicator";
+    };
+
+    const startEdit = (marker, name) => {
+      if (currentEditingMarker) currentEditingMarker.endEdit();
+
+      currentEditingMarker = marker;
+      notify(`开始编辑 ${name}`, "info");
+      marker.startEdit();
+
+      marker.on('drag', handleDrag);
+      marker.on('dragend', () => console.log(`${name} 最终位置:`, marker.getGeometry().coordinates));
+
+      updateUI(true, name);
+    };
+
+    const endEdit = () => {
+      if (currentEditingMarker) {
+        currentEditingMarker.off('drag', handleDrag);
+        currentEditingMarker.endEdit();
+        currentEditingMarker = null;
+        notify("已锁定位置", "success");
+      }
+      updateUI(false);
+    };
+
+    btnEdit1.addEventListener("click", () => startEdit(pointA, "点 A"));
+    btnEdit2.addEventListener("click", () => startEdit(pointB, "点 B"));
+    btnEnd.addEventListener("click", endEdit);
+
+    notify("点位编辑示例已加载", "success");
+  </script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+  <title>MapOrbis Marker Anchor Demo</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    #container {
+      height: 100%;
+      width: 100%;
+    }
+
+    .map-control-panel {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 280px;
+      z-index: 1000;
+    }
+
+    .map-control-panel .orbis-panel-header {
+      position: relative;
+      padding-right: 60px;
+    }
+
+    .map-control-panel .orbis-toggle {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+    }
+  </style>
+</head>
+<body class="orbis-body">
+  <div id="container"></div>
+
+  <div class="map-control-panel">
+    <div class="orbis-panel">
+      <div class="orbis-panel-header">
+        <h3 style="font-size: 15px; margin: 0 0 3px 0">
+          <i class="fas fa-anchor" style="color: var(--orbis-blue)"></i>
+          Marker Anchors
+        </h3>
+        <p style="font-size: 12px; color: var(--orbis-gray-6); margin: 0">
+          9 Anchor Positions Demo
+        </p>
+        <button class="orbis-toggle" id="themeToggle" title="Toggle Dark Mode">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+
+    let map, layer;
+    let markers = [];
+    let centerMarkers = [];
+
+    const positions = [
+      [116.493195, 39.993253],
+      [116.473195, 39.993253],
+      [116.453195, 39.993253],
+      [116.493195, 39.973253],
+      [116.473195, 39.973253],
+      [116.453195, 39.973253],
+      [116.493195, 39.953253],
+      [116.473195, 39.953253],
+      [116.453195, 39.953253],
+    ];
+
+    const anchors = [
+      'top-left',
+      'top',
+      'top-right',
+      'left',
+      'center',
+      'right',
+      'bottom-left',
+      'bottom',
+      'bottom-right',
+    ];
+
+    function initMap() {
+      try {
+        map = new maporbis.Map("container", {
+          state: {
+            center: [116.473195, 39.973253, 5000],
+          },
+          source: {
+            minLevel: 2,
+            maxLevel: 19,
+            baseLayers: [],
+          },
+          renderer: {
+            stats: true,
+            antialias: true,
+            skybox: {
+              hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+              hdrExposure: 1,
+              defaultColor: "#B9D4FE",
+            },
+            minDistance: 20,
+            maxDistance: 80000,
+            defaultGround: {
+              enabled: false,
+              visible: true,
+              color: "#ff0000",
+              opacity: 1,
+            },
+          },
+          camera: {
+            pitch: 85,
+            bearing: 0,
+          },
+        });
+
+        map.on("load", () => {
+          initLayer();
+          notify("地图加载成功", "success");
+        });
+      } catch (error) {
+        console.error("Map initialization failed:", error);
+        notify("地图初始化失败: " + error.message, "error");
+      }
+    }
+
+    function initLayer() {
+      layer = new maporbis.PointLayer("markers", { altitude: 5 });
+      map.addLayer(layer);
+      createMarkers();
+    }
+
+    function createMarkers() {
+      for (let i = 0; i < positions.length; i++) {
+        const centerMarker = new maporbis.Marker({
+          geometry: {
+            type: "Point",
+            coordinates: positions[i],
+          },
+          paint: {
+            type: "icon",
+            url: createCenterDotDataURL(),
+            size: 12,
+            sizeAttenuation: false,
+            anchor: 'center',
+          },
+        });
+        centerMarker.addTo(layer);
+        centerMarkers.push(centerMarker);
+      }
+
+      for (let i = 0; i < positions.length; i++) {
+        const anchor = anchors[i];
+        const marker = new maporbis.Marker({
+          geometry: {
+            type: "Point",
+            coordinates: positions[i],
+          },
+          paint: {
+            type: "icon",
+            url: createMarkerIconDataURL(anchor),
+            size: 16,
+            sizeAttenuation: false,
+            anchor: anchor,
+          },
+        });
+
+        marker.addTo(layer);
+        markers.push(marker);
+      }
+    }
+
+    function createCenterDotDataURL() {
+      const scale = 4;
+      const size = 12 * scale;
+      const center = size / 2;
+      const outerRadius = 6 * scale;
+      const innerRadius = 4 * scale;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(center, center, outerRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#FF3B30";
+      ctx.beginPath();
+      ctx.arc(center, center, innerRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      return canvas.toDataURL();
+    }
+
+    function createMarkerIconDataURL(anchorName) {
+      const scale = 4;
+      const baseWidth = 80;
+      const baseHeight = 28;
+      const width = baseWidth * scale;
+      const height = baseHeight * scale;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      ctx.scale(scale, scale);
+
+      const gradient = ctx.createLinearGradient(0, 0, baseWidth, baseHeight);
+      gradient.addColorStop(0, "#007AFF");
+      gradient.addColorStop(1, "#5856D6");
+      ctx.fillStyle = gradient;
+      roundRect(ctx, 0, 0, baseWidth, baseHeight, 4);
+      ctx.fill();
+
+      ctx.shadowColor = "rgba(0, 0, 0, 0.2)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+
+      ctx.fillStyle = "white";
+      ctx.font = "bold 10px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowBlur = 0;
+      ctx.fillText(anchorName, baseWidth / 2, baseHeight / 2);
+
+      return canvas.toDataURL();
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(initMap, 100);
+    });
+  </script>
+</body>
+</html>

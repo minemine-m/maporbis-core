@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+  <title>折线的编辑 - MapOrbis</title>
+  <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html, body, #container {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .orbis-control-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      z-index: 1000;
+    }
+
+    .edit-status {
+      padding: 12px;
+      background: rgba(24, 144, 255, 0.1);
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--orbis-blue);
+      display: none;
+    }
+
+    .edit-status.active {
+      display: block;
+    }
+
+    .orbis-btn {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body class="orbis-body">
+  <div id="container"></div>
+
+  <div class="orbis-control-panel">
+    <div class="orbis-panel orbis-shadow-lg">
+      <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1;">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+            <i class="fas fa-edit" style="color: var(--orbis-blue)"></i>
+            折线编辑
+          </h3>
+          <p style="font-size: 12px; color: var(--orbis-gray-6); margin: 2px 0 0 0;">MapOrbis 折线编辑功能</p>
+        </div>
+        <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <div class="orbis-panel-body">
+        <div class="edit-status" id="editStatus">
+          <i class="fas fa-info-circle"></i>
+          拖拽点进行编辑
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <button class="orbis-btn orbis-btn-primary" id="editLine1">
+            <i class="fas fa-edit"></i>
+            编辑折线1
+          </button>
+          <button class="orbis-btn orbis-btn-primary" id="editLine2">
+            <i class="fas fa-edit"></i>
+            编辑折线2
+          </button>
+          <button class="orbis-btn orbis-btn-secondary" id="endEditBtn">
+            <i class="fas fa-times"></i>
+            结束编辑
+          </button>
+        </div>
+
+        <div class="orbis-status-card">
+          <div class="orbis-status-title">编辑状态</div>
+          <div class="orbis-status-indicator" style="margin-bottom: 12px;">
+            <span class="orbis-indicator" id="statusIndicator"></span>
+            <div class="orbis-status-content" id="statusText">未编辑</div>
+          </div>
+          <div class="orbis-info-grid">
+            <div class="orbis-info-item">
+              <div class="orbis-info-label">当前折线</div>
+              <div class="orbis-info-value" id="currentLine">无</div>
+            </div>
+            <div class="orbis-info-item">
+              <div class="orbis-info-label">点数</div>
+              <div class="orbis-info-value" id="pointCount">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script src="/utils/inline-utils.js"></script>
+
+  <script type="module">
+    import * as maporbis from "@maporbis/core";
+
+    var map = new maporbis.Map("container", {
+      state: {
+        center: [116.4, 39.9, 5000000],
+      },
+      source: {
+        minLevel: 2,
+        maxLevel: 19,
+        baseLayers: [
+          new maporbis.WMTSTileLayer("esri_imagery", {
+            source: new maporbis.TileSource({
+              url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              projectionID: "3857",
+            }),
+            projection: maporbis.ProjectionFactory.create("3857"),
+            opacity: 1.0,
+            visible: true,
+            altitude: 1,
+          }),
+        ],
+      },
+      renderer: {
+        stats: true,
+        antialias: true,
+        skybox: {
+          hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+          hdrExposure: 1,
+          defaultColor: "#B9D4FE",
+        },
+        minDistance: 20,
+        maxDistance: 80000,
+      },
+      camera: {
+        pitch: 75,
+        bearing: 0,
+      },
+    });
+
+    let currentEditingLine = null;
+    let isEditing = false;
+
+    const line1Path = [[116.403322, 39.920255], [116.410703, 39.897555], [116.402292, 39.892353], [116.389846, 39.891365]];
+    const line2Path = [[116.453322, 39.920255], [116.460703, 39.897555], [116.452292, 39.892353], [116.439846, 39.891365]];
+
+    const lineLayer = new maporbis.LineLayer("lines", { altitude: 1 });
+    map.addLayer(lineLayer);
+
+    const line1 = new maporbis.LineString({
+      geometry: { type: "LineString", coordinates: line1Path },
+      paint: { type: "line", color: "#FF33FF", width: 6, opacity: 0.9 },
+      editable: true,
+    });
+
+    const line2 = new maporbis.LineString({
+      geometry: { type: "LineString", coordinates: line2Path },
+      paint: { type: "line", color: "#00FF00", width: 6, opacity: 0.9 },
+    editable: true,
+    });
+
+    line1.addTo(lineLayer);
+    line2.addTo(lineLayer);
+
+    function updateStatus() {
+      const statusIndicator = document.getElementById("statusIndicator");
+      const statusText = document.getElementById("statusText");
+      const currentLineEl = document.getElementById("currentLine");
+      const pointCountEl = document.getElementById("pointCount");
+      const editStatusEl = document.getElementById("editStatus");
+
+      if (isEditing && currentEditingLine) {
+        statusIndicator.className = "orbis-indicator orbis-indicator-active";
+        statusText.textContent = "编辑中";
+        editStatusEl.classList.add("active");
+        currentLineEl.textContent = currentEditingLine === line1 ? "折线1" : "折线2";
+        pointCountEl.textContent = currentEditingLine.getGeometry().coordinates.length;
+      } else {
+        statusIndicator.className = "orbis-indicator";
+        statusText.textContent = "未编辑";
+        editStatusEl.classList.remove("active");
+        currentLineEl.textContent = "无";
+        pointCountEl.textContent = "0";
+      }
+    }
+
+    function startEditing(line) {
+      if (currentEditingLine) {
+        currentEditingLine.endEdit();
+      }
+
+      isEditing = true;
+      currentEditingLine = line;
+      line.startEdit({
+        handleSize: 12,
+        handleColor: "#1890FF",
+        showMiddleHandles: false,
+      });
+      updateStatus();
+    }
+
+    document.getElementById("editLine1").onclick = () => {
+      startEditing(line1);
+      notify("开始编辑折线1", "info");
+    };
+    document.getElementById("editLine2").onclick = () => {
+      startEditing(line2);
+      notify("开始编辑折线2", "info");
+    };
+
+    document.getElementById("endEditBtn").onclick = function () {
+      if (currentEditingLine) {
+        currentEditingLine.endEdit();
+        isEditing = false;
+        currentEditingLine = null;
+        updateStatus();
+        notify("已结束编辑", "success");
+      } else {
+        notify("当前没有正在编辑的折线", "warning");
+      }
+    };
+
+    updateStatus();
+    notify("折线编辑示例已加载", "success");
+  </script>
+</body>
+</html>

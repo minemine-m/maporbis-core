@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>基础地图 - MapOrbis</title>
+    <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      html, body, #map {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .demo-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 300px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body class="orbis-body">
+    <div id="map"></div>
+
+    <div class="demo-panel">
+      <div class="orbis-panel orbis-shadow-lg">
+        <div class="orbis-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+            <i class="fas fa-map" style="color: var(--orbis-blue)"></i>
+            基础地图
+          </h3>
+          <button class="orbis-toggle" id="themeToggle" title="切换暗黑模式">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+        <div class="orbis-panel-body">
+          <div class="orbis-status-card">
+            <div class="orbis-status-title">地图状态</div>
+            <div class="orbis-status-indicator">
+              <span class="orbis-indicator" id="statusIndicator"></span>
+              <div class="orbis-status-content" id="statusText">正在加载...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+        }
+      }
+    </script>
+
+    <script src="/utils/inline-utils.js"></script>
+
+    <script type="module">
+      import * as maporbis from "@maporbis/core";
+
+      // Initialize Map
+      const map = new maporbis.Map("map", {
+        state: {
+          center: [116.4, 39.9, 2000], // Beijing, [lon, lat, height]
+        },
+        source: {
+          minLevel: 2,
+          maxLevel: 19,
+          baseLayers: [
+            new maporbis.WMTSTileLayer("esri_imagery", {
+              source: new maporbis.TileSource({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                projectionID: "3857",
+              }),
+              projection: maporbis.ProjectionFactory.create("3857"),
+              opacity: 1.0,
+              visible: true,
+              altitude: 1,
+            }),
+          ],
+        },
+        renderer: {
+          stats: true,
+          antialias: true,
+          skybox: {
+            hdr: "/assets/image/hdr/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+            hdrExposure: 1,
+            defaultColor: "#B9D4FE",
+          },
+          minDistance: 20,
+          maxDistance: 80000,
+          defaultGround: {
+            enabled: false,
+            visible: true,
+            color: "#ff0000",
+            opacity: 1,
+          },
+        },
+        camera: {
+          pitch: 75,
+          bearing: 0,
+        },
+      });
+
+      console.log("Map initialized:", map);
+
+      map.on("load", () => {
+        console.log("Map loaded event fired");
+        document.getElementById("statusIndicator").className = "orbis-indicator orbis-indicator-active";
+        document.getElementById("statusText").textContent = "地图加载完成";
+        notify("地图加载成功", "success");
+      });
+    </script>
+  </body>
+</html>
