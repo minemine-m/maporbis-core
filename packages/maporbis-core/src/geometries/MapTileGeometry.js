@@ -8,15 +8,7 @@ import { GeometryHelper } from "./GeometryHelper";
  * @description 专用于地图瓦片的几何体，支持设置地形数据和自动生成裙边。
  */
 export class MapTileGeometry extends PlaneGeometry {
-    constructor() {
-        super(...arguments);
-        Object.defineProperty(this, "type", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "MapTileGeometry"
-        });
-    }
+    type = "MapTileGeometry";
     /**
      * 设置地形数据
      * @param data 几何体数据 (IGeometryData) 或 DEM 高度图 (Float32Array)

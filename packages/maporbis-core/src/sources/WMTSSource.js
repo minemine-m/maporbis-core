@@ -6,6 +6,16 @@ import { interpolate } from "../utils";
  * @extends TileSource
  */
 export class WMTSSource extends TileSource {
+    /**
+     * 最小缩放级别
+     * @default 2
+     */
+    minLevel = 2;
+    /**
+     * 最大缩放级别
+     * @default 24
+     */
+    maxLevel = 24;
     // public dataType: string = "VectorTile";
     /**
      * 构造函数
@@ -16,26 +26,6 @@ export class WMTSSource extends TileSource {
             ...options,
             url: options.urlTemplate,
             isTMS: options.isTMS || false
-        });
-        /**
-         * 最小缩放级别
-         * @default 2
-         */
-        Object.defineProperty(this, "minLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 2
-        });
-        /**
-         * 最大缩放级别
-         * @default 24
-         */
-        Object.defineProperty(this, "maxLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 24
         });
     }
     /**

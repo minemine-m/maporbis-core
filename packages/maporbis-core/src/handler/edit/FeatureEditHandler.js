@@ -33,6 +33,34 @@ import { getLocalFromMouse } from '../../utils/tilemaputils';
   * @category Handler
  */
 export class FeatureEditHandler extends Handler {
+    /** Edit options 编辑配置选项 */
+    options;
+    /** Edit handles array 编辑手柄数组 */
+    _handles = [];
+    /** Middle handles array (for inserting new vertices) 中点手柄数组（用于插入新顶点） */
+    _middleHandles = [];
+    /** Middle handle color (translucent) 中点手柄颜色（半透明） */
+    _middleHandleColor = 'rgba(255, 255, 255, 0.6)';
+    /** Whether is editing 是否正在编辑 */
+    _editing = false;
+    /** Feature shadow copy 要素的影子副本 */
+    _shadow = null;
+    /** Initial coordinate snapshot of shadow copy (for cancelling edit) 影子副本的初始坐标快照（用于取消编辑） */
+    _shadowSnapshot = null;
+    /** Whether is updating (to avoid recursive triggers) 是否正在更新（用于避免重复触发） */
+    _updating = false;
+    /** Edit history records 编辑历史记录 */
+    _history = [];
+    /** Current history index 当前历史记录索引 */
+    _historyIndex = -1;
+    /** Original draggable state before dragging 拖拽前的原始draggable状态 */
+    _draggableOriginalState = false;
+    /** Bound event handlers 绑定的事件处理函数 */
+    _boundOnMapMouseMove = null;
+    _boundOnMapClick = null;
+    _boundOnMapMouseDown = null;
+    _boundOnFeatureDragging = null;
+    _boundOnFeatureDragEnd = null;
     /**
      * Create feature edit handler instance
      * 创建要素编辑处理器实例
@@ -42,114 +70,6 @@ export class FeatureEditHandler extends Handler {
      */
     constructor(target, options) {
         super(target);
-        /** Edit options 编辑配置选项 */
-        Object.defineProperty(this, "options", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Edit handles array 编辑手柄数组 */
-        Object.defineProperty(this, "_handles", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /** Middle handles array (for inserting new vertices) 中点手柄数组（用于插入新顶点） */
-        Object.defineProperty(this, "_middleHandles", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /** Middle handle color (translucent) 中点手柄颜色（半透明） */
-        Object.defineProperty(this, "_middleHandleColor", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 'rgba(255, 255, 255, 0.6)'
-        });
-        /** Whether is editing 是否正在编辑 */
-        Object.defineProperty(this, "_editing", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Feature shadow copy 要素的影子副本 */
-        Object.defineProperty(this, "_shadow", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Initial coordinate snapshot of shadow copy (for cancelling edit) 影子副本的初始坐标快照（用于取消编辑） */
-        Object.defineProperty(this, "_shadowSnapshot", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Whether is updating (to avoid recursive triggers) 是否正在更新（用于避免重复触发） */
-        Object.defineProperty(this, "_updating", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Edit history records 编辑历史记录 */
-        Object.defineProperty(this, "_history", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /** Current history index 当前历史记录索引 */
-        Object.defineProperty(this, "_historyIndex", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: -1
-        });
-        /** Original draggable state before dragging 拖拽前的原始draggable状态 */
-        Object.defineProperty(this, "_draggableOriginalState", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Bound event handlers 绑定的事件处理函数 */
-        Object.defineProperty(this, "_boundOnMapMouseMove", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "_boundOnMapClick", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "_boundOnMapMouseDown", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "_boundOnFeatureDragging", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "_boundOnFeatureDragEnd", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
         // 合并默认配置
         this.options = {
             handleSize: options?.handleSize ?? 8,

@@ -9,17 +9,17 @@ import { _createBasicPoint } from '../utils/createobject';
  * @category Paint
  */
 export class Paint {
+    config;
+    /** Texture cache */
+    static _textureCache = new Map();
+    /** Texture loader */
+    static _textureLoader = new TextureLoader();
     /**
      * Constructor
      * @param config Paint configuration
      */
     constructor(config) {
-        Object.defineProperty(this, "config", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: config
-        });
+        this.config = config;
     }
     /**
      * 应用样式到3D对象
@@ -386,20 +386,5 @@ export class Paint {
         return input instanceof Paint ? input : new Paint(input);
     }
 }
-/** Texture cache */
-Object.defineProperty(Paint, "_textureCache", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Map()
-});
-/** Texture loader */
-Object.defineProperty(Paint, "_textureLoader", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new TextureLoader()
-});
-export { LayerPaint } from './Layerstyle';
 // Export matchFilter from filter
 export { matchFilter } from './filter';

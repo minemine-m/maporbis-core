@@ -21,6 +21,11 @@ import { Feature } from './Feature';
  */
 export class Point extends Feature {
     /**
+     * Base type identifier.
+     * 基础类型标识
+     */
+    _baseType = "Point";
+    /**
      * Create a Point feature instance.
      * 创建点要素实例
      *
@@ -29,16 +34,6 @@ export class Point extends Feature {
      */
     constructor(options) {
         super(options);
-        /**
-         * Base type identifier.
-         * 基础类型标识
-         */
-        Object.defineProperty(this, "_baseType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "Point"
-        });
         this._renderObject = this._createRenderObject();
         if (this._paint) {
             this._paint.applyTo(this._renderObject);

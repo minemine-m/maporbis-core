@@ -1,18 +1,13 @@
 /**
  */
 export class PromiseWorker {
+    worker;
     /**
      * 构造函数
      *
      * @param creator 创建一个 Worker 实例的函数
      */
     constructor(creator) {
-        Object.defineProperty(this, "worker", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this.worker = creator();
     }
     /**

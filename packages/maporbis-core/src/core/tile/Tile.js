@@ -19,6 +19,11 @@ const frustum = new Frustum();
  * 继承自带有BufferGeometry和Material的Mesh类。
  */
 export class Tile extends Mesh {
+    static _activeDownloads = 0;
+    // Data mode switch 数据模式开关
+    _dataMode = false;
+    /** Vector Data 矢量数据 */
+    _vectorData = null;
     /**
         * Set data only mode (do not create Mesh, only return data)
         * 设置为数据模式（不创建Mesh，只返回数据）
@@ -51,9 +56,23 @@ export class Tile extends Mesh {
     static get downloadThreads() {
         return Tile._activeDownloads;
     }
+    /** Coordinate of tile 瓦片坐标 */
+    x;
+    y;
+    z;
+    /** Is a tile? 是否是瓦片？ */
+    isTile = true;
+    /** Tile parent 父瓦片 */
+    parent = null;
+    /** Children of tile 子瓦片 */
+    children = [];
+    _isReady = false;
+    /** return this.minLevel < map.minLevel, True mean do not needs load tile data. True表示不需要加载瓦片数据 */
+    _isVirtualTile = false;
     get isDummy() {
         return this._isVirtualTile;
     }
+    _isVisible = false;
     // private _wasShowing = false; // Record last showing value 记录上一次 showing 的值
     /**
      * Gets the showing state of the tile.
@@ -86,6 +105,8 @@ export class Tile extends Mesh {
             this.dispatchEvent({ type: "tile-hidden", tile: this });
         }
     }
+    /** Max height of tile 瓦片最大高度 */
+    _maxHeight = 0;
     /**
      * Gets the maximum height of the tile.
      * 获取瓦片的最大高度。
@@ -101,6 +122,10 @@ export class Tile extends Mesh {
     set maxZ(value) {
         this._maxHeight = value;
     }
+    /** Distance to camera 到相机的距离 */
+    distToCamera = 0;
+    /* Tile size in world 世界空间中的瓦片大小 */
+    sizeInWorld = 0;
     /**
      * Gets the index of the tile in its parent's children array.
      * 获取瓦片在父节点子数组中的索引。
@@ -109,6 +134,7 @@ export class Tile extends Mesh {
     get index() {
         return this.parent ? this.parent.children.indexOf(this) : -1;
     }
+    _isLoaded = false;
     /**
      * Gets the load state of the tile.
      * 获取瓦片的加载状态。
@@ -116,6 +142,7 @@ export class Tile extends Mesh {
     get loaded() {
         return this._isLoaded;
     }
+    _inFrustum = false;
     /** Is tile in frustum ? 瓦片是否在视锥体中？ */
     get inFrustum() {
         return this._inFrustum;
@@ -141,112 +168,6 @@ export class Tile extends Mesh {
      */
     constructor(x = 0, y = 0, z = 0) {
         super(defaultGeometry, []);
-        // Data mode switch 数据模式开关
-        Object.defineProperty(this, "_dataMode", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Vector Data 矢量数据 */
-        Object.defineProperty(this, "_vectorData", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Coordinate of tile 瓦片坐标 */
-        Object.defineProperty(this, "x", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "y", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "z", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Is a tile? 是否是瓦片？ */
-        Object.defineProperty(this, "isTile", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: true
-        });
-        /** Tile parent 父瓦片 */
-        Object.defineProperty(this, "parent", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Children of tile 子瓦片 */
-        Object.defineProperty(this, "children", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        Object.defineProperty(this, "_isReady", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** return this.minLevel < map.minLevel, True mean do not needs load tile data. True表示不需要加载瓦片数据 */
-        Object.defineProperty(this, "_isVirtualTile", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        Object.defineProperty(this, "_isVisible", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Max height of tile 瓦片最大高度 */
-        Object.defineProperty(this, "_maxHeight", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /** Distance to camera 到相机的距离 */
-        Object.defineProperty(this, "distToCamera", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /* Tile size in world 世界空间中的瓦片大小 */
-        Object.defineProperty(this, "sizeInWorld", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        Object.defineProperty(this, "_isLoaded", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        Object.defineProperty(this, "_inFrustum", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
         this.x = x;
         this.y = y;
         this.z = z;
@@ -516,9 +437,3 @@ export class Tile extends Mesh {
         return this;
     }
 }
-Object.defineProperty(Tile, "_activeDownloads", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: 0
-});

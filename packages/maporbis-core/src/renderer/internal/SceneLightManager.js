@@ -10,6 +10,29 @@ import { AmbientLight, DirectionalLight, Object3D, CameraHelper } from 'three';
  * @internal
  */
 export class SceneLightManager {
+    /** Ambient light. 环境光 */
+    _ambientLight = null;
+    /** Main directional light. 主平行光 */
+    _directionalLight = null;
+    /** Auxiliary lights. 辅助光源 */
+    _auxiliaryLights = [];
+    /** Scene reference. 场景引用 */
+    _scene;
+    /** World center position. 世界中心位置 */
+    _centerWorldPos;
+    /** Debug mode. 调试模式 */
+    _debug;
+    /** Default light configuration. 默认光照配置 */
+    static DEFAULT_CONFIG = {
+        ambientColor: 0xffffff,
+        ambientIntensity: 2,
+        directionalColor: 'rgba(248, 167, 16, 1)',
+        directionalIntensity: 10,
+        shadowMapSize: 10,
+        shadowNear: 1,
+        shadowFar: 192500,
+        shadowCameraSize: 55000
+    };
     /**
      * Create a scene light manager instance.
      * 创建场景光照管理器实例
@@ -19,48 +42,6 @@ export class SceneLightManager {
      * @param debug - Whether to enable debug mode. 是否启用调试模式
      */
     constructor(scene, centerWorldPos, debug = false) {
-        /** Ambient light. 环境光 */
-        Object.defineProperty(this, "_ambientLight", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Main directional light. 主平行光 */
-        Object.defineProperty(this, "_directionalLight", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Auxiliary lights. 辅助光源 */
-        Object.defineProperty(this, "_auxiliaryLights", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /** Scene reference. 场景引用 */
-        Object.defineProperty(this, "_scene", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** World center position. 世界中心位置 */
-        Object.defineProperty(this, "_centerWorldPos", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Debug mode. 调试模式 */
-        Object.defineProperty(this, "_debug", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this._scene = scene;
         this._centerWorldPos = centerWorldPos;
         this._debug = debug;
@@ -242,19 +223,3 @@ export class SceneLightManager {
         this._auxiliaryLights = [];
     }
 }
-/** Default light configuration. 默认光照配置 */
-Object.defineProperty(SceneLightManager, "DEFAULT_CONFIG", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: {
-        ambientColor: 0xffffff,
-        ambientIntensity: 2,
-        directionalColor: 'rgba(248, 167, 16, 1)',
-        directionalIntensity: 10,
-        shadowMapSize: 10,
-        shadowNear: 1,
-        shadowFar: 192500,
-        shadowCameraSize: 55000
-    }
-});

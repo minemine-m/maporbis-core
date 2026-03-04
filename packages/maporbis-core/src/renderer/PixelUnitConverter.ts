@@ -275,4 +275,4 @@ class PixelUnitConverter {
     }
 }
 
-export { PixelUnitConverter, ConversionOptions };
+export { PixelUnitConverter, type ConversionOptions };

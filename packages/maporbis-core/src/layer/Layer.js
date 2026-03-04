@@ -37,6 +37,41 @@ const options = {
  */
 export class Layer extends Handlerable(EventMixin(BaseMixin(Group))) {
     /**
+     * Layer unique identifier.
+     * 图层唯一标识
+     */
+    _layerId;
+    /**
+     * Layer opacity.
+     * 图层透明度
+     */
+    opacity = 1;
+    /**
+     * Animation callback set.
+     * 动画回调集合
+     */
+    _animCallbacks = new Set();
+    /**
+     * Whether it is a scene layer.
+     * 是否为场景层
+     */
+    isSceneLayer = false;
+    /**
+     * Current altitude record.
+     * 当前高度记录
+     */
+    _baseAltitude = 0;
+    /**
+     * Layer-level depth offset (default value for style depthOffset).
+     * 图层级深度偏移（作为样式 depthOffset 的默认值）
+     */
+    depthOffset;
+    /**
+     * Region overlay configuration set (common to all subclasses).
+     * 区域蒙版配置集合（所有子类通用）
+     */
+    _regionConfigs = [];
+    /**
      * Create a layer instance.
      * 创建图层实例
      * @param layerId - Layer ID. 图层ID
@@ -45,76 +80,6 @@ export class Layer extends Handlerable(EventMixin(BaseMixin(Group))) {
      */
     constructor(layerId, config) {
         super();
-        /**
-         * Layer unique identifier.
-         * 图层唯一标识
-         */
-        Object.defineProperty(this, "_layerId", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Layer opacity.
-         * 图层透明度
-         */
-        Object.defineProperty(this, "opacity", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 1
-        });
-        /**
-         * Animation callback set.
-         * 动画回调集合
-         */
-        Object.defineProperty(this, "_animCallbacks", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Set()
-        });
-        /**
-         * Whether it is a scene layer.
-         * 是否为场景层
-         */
-        Object.defineProperty(this, "isSceneLayer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /**
-         * Current altitude record.
-         * 当前高度记录
-         */
-        Object.defineProperty(this, "_baseAltitude", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /**
-         * Layer-level depth offset (default value for style depthOffset).
-         * 图层级深度偏移（作为样式 depthOffset 的默认值）
-         */
-        Object.defineProperty(this, "depthOffset", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Region overlay configuration set (common to all subclasses).
-         * 区域蒙版配置集合（所有子类通用）
-         */
-        Object.defineProperty(this, "_regionConfigs", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
         requireParam(layerId, "id", "Layer ID must be specified 图层ID必须指定");
         if (config) {
             this.setOptions(config);

@@ -20,63 +20,28 @@
   * @category Core
  */
 export class PerformanceMonitor {
+    // Performance data storage 性能数据存储
+    frameStats = new Map();
+    summaryStats = {
+        totalFrames: 0,
+        averageFrameTime: 0,
+        averageFPS: 0,
+        minFrameTime: Infinity,
+        maxFrameTime: 0,
+        totalFeaturesProcessed: 0
+    };
+    // Real-time monitoring window (recent N frames) 实时监控窗口（最近N帧）
+    sampleWindowSize = 60; // Keep recent 60 frames 保留最近60帧数据
+    currentFrameId = 0;
+    lastReportTime = 0;
+    reportInterval = 5000; // Report every 5 seconds 5秒报告一次
+    // Performance threshold configuration 性能阈值配置
+    performanceThresholds = {
+        criticalFrameTime: 33, // < 30fps is critical 30fps以下为严重
+        warningFrameTime: 16, // < 60fps is warning 60fps以下为警告
+        idealFrameTime: 8 // > 120fps is ideal 120fps以上为理想
+    };
     constructor() {
-        // Performance data storage 性能数据存储
-        Object.defineProperty(this, "frameStats", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Map()
-        });
-        Object.defineProperty(this, "summaryStats", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                totalFrames: 0,
-                averageFrameTime: 0,
-                averageFPS: 0,
-                minFrameTime: Infinity,
-                maxFrameTime: 0,
-                totalFeaturesProcessed: 0
-            }
-        });
-        // Real-time monitoring window (recent N frames) 实时监控窗口（最近N帧）
-        Object.defineProperty(this, "sampleWindowSize", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 60
-        }); // Keep recent 60 frames 保留最近60帧数据
-        Object.defineProperty(this, "currentFrameId", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        Object.defineProperty(this, "lastReportTime", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        Object.defineProperty(this, "reportInterval", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 5000
-        }); // Report every 5 seconds 5秒报告一次
-        // Performance threshold configuration 性能阈值配置
-        Object.defineProperty(this, "performanceThresholds", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                criticalFrameTime: 33, // < 30fps is critical 30fps以下为严重
-                warningFrameTime: 16, // < 60fps is warning 60fps以下为警告
-                idealFrameTime: 8 // > 120fps is ideal 120fps以上为理想
-            }
-        });
         this.lastReportTime = Date.now();
     }
     /**

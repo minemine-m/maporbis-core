@@ -1081,8 +1081,8 @@ export class Paint {
 }
 
 // Export PaintRule from Layerstyle
-export { PaintRule } from './Layerstyle';
-export { LayerPaint } from './Layerstyle';
+export type { PaintRule } from './Layerstyle';
+export type { LayerPaint } from './Layerstyle';
 
 // Export matchFilter from filter
 export { matchFilter } from './filter';

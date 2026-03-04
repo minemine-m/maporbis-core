@@ -10,6 +10,18 @@ import { Paint } from '../../style/index';
  * @internal
  */
 export class FeaturePaintManager {
+    /** Paint queue for handling asynchronous paint application. 样式队列（用于处理异步样式应用） */
+    _paintQueue = [];
+    /** Whether paint is currently being applied. 是否正在应用样式 */
+    _isApplyingPaint = false;
+    /** Current paint instance. 当前样式实例 */
+    _currentPaint;
+    /** Callback when paint is applied successfully. 样式成功应用后的回调 */
+    _onPaintApplied;
+    /** Render object getter. 渲染对象获取器 */
+    _getRenderObject;
+    /** Add render object to parent. 将渲染对象添加到父级 */
+    _addRenderObject;
     /**
      * Create a paint manager instance.
      * 创建样式管理器实例
@@ -18,48 +30,6 @@ export class FeaturePaintManager {
      * @param addRenderObject - Function to add render object to parent. 添加渲染对象到父级的函数
      */
     constructor(getRenderObject, addRenderObject) {
-        /** Paint queue for handling asynchronous paint application. 样式队列（用于处理异步样式应用） */
-        Object.defineProperty(this, "_paintQueue", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /** Whether paint is currently being applied. 是否正在应用样式 */
-        Object.defineProperty(this, "_isApplyingPaint", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Current paint instance. 当前样式实例 */
-        Object.defineProperty(this, "_currentPaint", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Callback when paint is applied successfully. 样式成功应用后的回调 */
-        Object.defineProperty(this, "_onPaintApplied", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Render object getter. 渲染对象获取器 */
-        Object.defineProperty(this, "_getRenderObject", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Add render object to parent. 将渲染对象添加到父级 */
-        Object.defineProperty(this, "_addRenderObject", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this._getRenderObject = getRenderObject;
         this._addRenderObject = addRenderObject;
     }

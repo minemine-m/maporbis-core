@@ -580,7 +580,7 @@ export class SceneRenderer extends SceneRendererBase {
       }
     } catch (error) {
       console.error("加载HDR失败:", error);
-      scene.background = new Color(skyboxConfig?.defaultColor || 0xdbf0ff);
+      this.scene.background = new Color(skyboxConfig?.defaultColor || 0xdbf0ff);
     }
   }
 

@@ -27,8 +27,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@shared': resolve(__dirname, '../shared'),
-      '@maporbis/core': resolve(__dirname, '../../packages/maporbis-core/src/index.ts')
+      '@maporbis/core': resolve(__dirname, '../../packages/maporbis-core/dist/index.js')
     }
+  },
+  optimizeDeps: {
+    include: ['three', 'three-stdlib', '@pmndrs/vanilla', 'uuid', 'lodash', 'd3-quadtree', 'earcut', 'fflate', 'potpack']
   },
   server: {
     port: 3000,

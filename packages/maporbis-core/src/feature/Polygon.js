@@ -28,6 +28,12 @@ const options = {
  */
 export class Polygon extends Surface {
     /**
+     * Feature type identifier.
+     * 要素类型标识
+     */
+    _type = 'Polygon';
+    _worldLngLatLikes;
+    /**
      * Create a Polygon feature instance.
      * 创建多边形要素实例
      *
@@ -36,22 +42,6 @@ export class Polygon extends Surface {
      */
     constructor(options) {
         super(options);
-        /**
-         * Feature type identifier.
-         * 要素类型标识
-         */
-        Object.defineProperty(this, "_type", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 'Polygon'
-        });
-        Object.defineProperty(this, "_worldLngLatLikes", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
     }
     /**
      * Convert feature to Three.js geometry.

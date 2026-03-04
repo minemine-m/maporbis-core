@@ -11,35 +11,15 @@ const WORKER_THREAD_COUNT = 10;
  * @description 加载并解析 LERC (Limited Error Raster Compression) 格式的高程数据
  */
 export class ArcGISLercLoader extends AbstractGeometryLoader {
+    info = {
+        version: "1.0.0",
+        description: "Loader for ArcGIS LERC compressed terrain data.",
+    };
+    dataType = "lerc";
+    fileLoader = new FileLoader(TileLoaderFactory.manager);
+    workerPool = new WorkerPool(0);
     constructor() {
         super();
-        Object.defineProperty(this, "info", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                version: "1.0.0",
-                description: "Loader for ArcGIS LERC compressed terrain data.",
-            }
-        });
-        Object.defineProperty(this, "dataType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "lerc"
-        });
-        Object.defineProperty(this, "fileLoader", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new FileLoader(TileLoaderFactory.manager)
-        });
-        Object.defineProperty(this, "workerPool", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new WorkerPool(0)
-        });
         this.fileLoader.setResponseType("arraybuffer");
         this.workerPool.setWorkerCreator(() => new ParseWorker());
     }

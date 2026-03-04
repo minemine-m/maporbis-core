@@ -14,6 +14,12 @@ import { BaseTileLayer } from "./TileLayer";
  */
 export class RasterTileLayer extends BaseTileLayer {
     /**
+     * Layer type identifier.
+     * 图层类型标识符。
+     * @readonly
+     */
+    layerType = "raster";
+    /**
      * Create a new RasterTileLayer instance.
      * 创建一个新的 RasterTileLayer 实例。
      *
@@ -22,17 +28,6 @@ export class RasterTileLayer extends BaseTileLayer {
      */
     constructor(id, options) {
         super(id, options);
-        /**
-         * Layer type identifier.
-         * 图层类型标识符。
-         * @readonly
-         */
-        Object.defineProperty(this, "layerType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "raster"
-        });
         // console.log(`RasterTileLayer "${id}" Created successfully 创建成功`);
     }
     /**

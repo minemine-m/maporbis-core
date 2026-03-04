@@ -10,21 +10,11 @@ import { WebGPUCompat } from '../utils/WebGPUCompat';
   * @category Layer
  */
 export class OverlayLayer extends Layer {
+    _feaList; // Use generic constraint array type 使用泛型约束数组类型
+    _collision = false;
     // _collisionDetector: CollisionDetector<T>; // Changed to protected for subclass access 改为protected以便子类访问
     constructor(id, options) {
         super(id, options);
-        Object.defineProperty(this, "_feaList", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        }); // Use generic constraint array type 使用泛型约束数组类型
-        Object.defineProperty(this, "_collision", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
         this._feaList = [];
         // Initialize collision detector
         // 初始化碰撞检测器

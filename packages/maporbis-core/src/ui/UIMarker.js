@@ -11,30 +11,20 @@ import { UIComponent } from "./UIComponent";
   * @category UI
  */
 export class UIMarker extends UIComponent {
+    /**
+     * Current marker coordinate
+     * 当前标记点坐标
+     */
+    _markerCoord;
+    /**
+     * Content cache
+     * 内容缓存
+     */
+    _content;
     constructor(options) {
         super({
             single: false, // UIMarker allows multiple instances by default UIMarker 默认允许同图多实例共存
             ...options,
-        });
-        /**
-         * Current marker coordinate
-         * 当前标记点坐标
-         */
-        Object.defineProperty(this, "_markerCoord", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Content cache
-         * 内容缓存
-         */
-        Object.defineProperty(this, "_content", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
         });
         this._markerCoord = [...options.coordinate];
         this._content = options.content;

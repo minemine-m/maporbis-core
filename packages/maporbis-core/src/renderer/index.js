@@ -18,6 +18,49 @@ const SceneRendererBase = EventMixin(BaseMixin((EventDispatcher)));
  * @category SceneRenderer
  */
 export class SceneRenderer extends SceneRendererBase {
+    /** Scene object 场景对象 */
+    scene;
+    /** WebGL renderer WebGL渲染器 */
+    renderer;
+    /** Perspective camera 透视相机 */
+    camera;
+    /** Map controls 地图控制器 */
+    controls;
+    /** Ambient light 环境光 */
+    ambLight;
+    /** Directional light 平行光 */
+    dirLight;
+    /** 辅助平行光 (补光) */
+    // public readonly auxDirLight: DirectionalLight;
+    /** 云层效果 */
+    clouds = null;
+    /** 容器元素 */
+    container;
+    /** 内部时钟 */
+    _clock = new Clock();
+    /** 性能统计器 */
+    // @ts-ignore
+    stats;
+    /** 动画回调集合 */
+    _animationCallbacks = new Set();
+    /** 雾效因子 */
+    _fogFactor = 1.0;
+    _sceneSize = 50000 * 2;
+    /** 地面网格 */
+    _defaultGround;
+    /** 地图实例 */
+    map;
+    centerWorldPos;
+    _isInteracting = false;
+    /** 是否启用调试模式 */
+    debug = false;
+    flyTween = null;
+    /** 渲染器是否已准备就绪 (WebGPU需要异步初始化) */
+    _isRendererReady = false;
+    /** 后期处理：bloom 管线 */
+    composer;
+    renderPass;
+    bloomPass;
     /**
      * 获取雾效因子
      */
@@ -56,189 +99,6 @@ export class SceneRenderer extends SceneRendererBase {
      */
     constructor(container, options = {}) {
         super();
-        /** Scene object 场景对象 */
-        Object.defineProperty(this, "scene", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** WebGL renderer WebGL渲染器 */
-        Object.defineProperty(this, "renderer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Perspective camera 透视相机 */
-        Object.defineProperty(this, "camera", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Map controls 地图控制器 */
-        Object.defineProperty(this, "controls", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Ambient light 环境光 */
-        Object.defineProperty(this, "ambLight", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Directional light 平行光 */
-        Object.defineProperty(this, "dirLight", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** 辅助平行光 (补光) */
-        // public readonly auxDirLight: DirectionalLight;
-        /** 云层效果 */
-        Object.defineProperty(this, "clouds", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** 容器元素 */
-        Object.defineProperty(this, "container", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** 内部时钟 */
-        Object.defineProperty(this, "_clock", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Clock()
-        });
-        /** 性能统计器 */
-        // @ts-ignore
-        Object.defineProperty(this, "stats", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** 动画回调集合 */
-        Object.defineProperty(this, "_animationCallbacks", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Set()
-        });
-        /** 雾效因子 */
-        Object.defineProperty(this, "_fogFactor", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 1.0
-        });
-        Object.defineProperty(this, "_sceneSize", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 50000 * 2
-        });
-        /** 地面网格 */
-        Object.defineProperty(this, "_defaultGround", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** 地图实例 */
-        Object.defineProperty(this, "map", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "centerWorldPos", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_isInteracting", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** 是否启用调试模式 */
-        Object.defineProperty(this, "debug", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        Object.defineProperty(this, "flyTween", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** 渲染器是否已准备就绪 (WebGPU需要异步初始化) */
-        Object.defineProperty(this, "_isRendererReady", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** 后期处理：bloom 管线 */
-        Object.defineProperty(this, "composer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "renderPass", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "bloomPass", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Calculate camera position in world coordinates.
-         * 计算相机在世界坐标系中的位置
-         * @param target Target point (world coordinates) 目标点（世界坐标）
-         * @param distance Distance from camera to target 相机到目标的距离
-         * @param pitchRad Pitch angle in radians (0=top-down, Math.PI/2=horizontal) 俯仰角（弧度）
-         * @param bearingRad Bearing angle in radians 方位角（弧度）
-         * @returns Camera position (world coordinates) 相机位置（世界坐标）
-         */
-        Object.defineProperty(this, "calculateCameraPosition", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: (target, distance, pitchRad, bearingRad) => {
-                // Use rotation matrix
-                // Calculate camera at default position (south of target, +Z direction)
-                const defaultOffset = new Vector3(0, // X component
-                distance * Math.cos(pitchRad), // Y component
-                distance * Math.sin(pitchRad));
-                // Rotate around Y axis by bearing angle
-                // Note: Three.js applyAxisAngle uses right-hand rule, counter-clockwise is positive
-                defaultOffset.applyAxisAngle(new Vector3(0, 1, 0), bearingRad);
-                return new Vector3(target.x + defaultOffset.x, target.y + defaultOffset.y, target.z + defaultOffset.z);
-            }
-        });
         // 手动设置 options
         this.setOptions(options);
         const { antialias = false, stencil = true, logarithmicDepthBuffer = true, skybox, map, bloom, minDistance, maxDistance, draggable = true, defaultGround, useWebGPU = false, } = options;
@@ -418,7 +278,7 @@ export class SceneRenderer extends SceneRendererBase {
         }
         catch (error) {
             console.error("加载HDR失败:", error);
-            scene.background = new Color(skyboxConfig?.defaultColor || 0xdbf0ff);
+            this.scene.background = new Color(skyboxConfig?.defaultColor || 0xdbf0ff);
         }
     }
     /**
@@ -1053,6 +913,26 @@ export class SceneRenderer extends SceneRendererBase {
             curvePath: useCurvePath,
         });
     }
+    /**
+     * Calculate camera position in world coordinates.
+     * 计算相机在世界坐标系中的位置
+     * @param target Target point (world coordinates) 目标点（世界坐标）
+     * @param distance Distance from camera to target 相机到目标的距离
+     * @param pitchRad Pitch angle in radians (0=top-down, Math.PI/2=horizontal) 俯仰角（弧度）
+     * @param bearingRad Bearing angle in radians 方位角（弧度）
+     * @returns Camera position (world coordinates) 相机位置（世界坐标）
+     */
+    calculateCameraPosition = (target, distance, pitchRad, bearingRad) => {
+        // Use rotation matrix
+        // Calculate camera at default position (south of target, +Z direction)
+        const defaultOffset = new Vector3(0, // X component
+        distance * Math.cos(pitchRad), // Y component
+        distance * Math.sin(pitchRad));
+        // Rotate around Y axis by bearing angle
+        // Note: Three.js applyAxisAngle uses right-hand rule, counter-clockwise is positive
+        defaultOffset.applyAxisAngle(new Vector3(0, 1, 0), bearingRad);
+        return new Vector3(target.x + defaultOffset.x, target.y + defaultOffset.y, target.z + defaultOffset.z);
+    };
     /**
      * Get current scene state
      * 获取当前场景状态

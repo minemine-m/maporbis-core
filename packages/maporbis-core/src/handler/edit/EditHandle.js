@@ -26,6 +26,21 @@ import { EventMixin } from '../../core/mixins';
   * @category Handler
  */
 export class EditHandle extends EventMixin(Object) {
+    /** Handle options 手柄配置选项 */
+    options;
+    /** Map instance 所属地图实例 */
+    map;
+    /** Three.js Sprite object Three.js Sprite 对象 */
+    _sprite = null;
+    /** Whether is dragging 是否正在拖拽 */
+    _isDragging = false;
+    /** Drag start position 拖拽起始位置 */
+    _dragStartPosition = null;
+    /** Last mouse geographic coordinate 上一次的鼠标地理坐标 */
+    _lastCoordinate = null;
+    /** Bound event handlers 绑定的事件处理函数 */
+    _boundOnMouseMove = null;
+    _boundOnMouseUp = null;
     /**
      * Create edit handle instance
      * 创建编辑手柄实例
@@ -35,61 +50,6 @@ export class EditHandle extends EventMixin(Object) {
      */
     constructor(options, map) {
         super();
-        /** Handle options 手柄配置选项 */
-        Object.defineProperty(this, "options", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Map instance 所属地图实例 */
-        Object.defineProperty(this, "map", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Three.js Sprite object Three.js Sprite 对象 */
-        Object.defineProperty(this, "_sprite", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Whether is dragging 是否正在拖拽 */
-        Object.defineProperty(this, "_isDragging", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Drag start position 拖拽起始位置 */
-        Object.defineProperty(this, "_dragStartPosition", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Last mouse geographic coordinate 上一次的鼠标地理坐标 */
-        Object.defineProperty(this, "_lastCoordinate", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Bound event handlers 绑定的事件处理函数 */
-        Object.defineProperty(this, "_boundOnMouseMove", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        Object.defineProperty(this, "_boundOnMouseUp", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
         this.map = map;
         // 合并默认配置
         this.options = {

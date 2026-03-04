@@ -21,48 +21,26 @@ import { WebGPUCompat } from '../../../utils/WebGPUCompat';
   * @category Layer
  */
 export class VectorTileRenderLayer extends OverlayLayer {
+    static _textureCache = new Map();
+    static _geometryCache = new Map();
+    static _materialCache = new Map(); // 共享材质缓存
+    TILE_SIZE;
+    EXTENT;
+    paint;
+    /**
+     * Store Features corresponding to each tile for lifecycle management and updates.
+     * 存储每个瓦片对应的 Features，用于管理生命周期和更新。
+     * @private
+     */
+    _tileFeatureMap = new Map();
+    /**
+     * Currently active feature filter (from VectorTileLayer).
+     * 当前激活的要素过滤器 (来自 VectorTileLayer)。
+     * @private
+     */
+    _activeFeatureFilter;
     constructor(id, options) {
         super(id, options);
-        Object.defineProperty(this, "TILE_SIZE", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "EXTENT", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "paint", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Store Features corresponding to each tile for lifecycle management and updates.
-         * 存储每个瓦片对应的 Features，用于管理生命周期和更新。
-         * @private
-         */
-        Object.defineProperty(this, "_tileFeatureMap", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Map()
-        });
-        /**
-         * Currently active feature filter (from VectorTileLayer).
-         * 当前激活的要素过滤器 (来自 VectorTileLayer)。
-         * @private
-         */
-        Object.defineProperty(this, "_activeFeatureFilter", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this.TILE_SIZE = options.tileSize ?? 256;
         this.EXTENT = options.extent ?? 4096;
         // Initialize as array
@@ -903,24 +881,6 @@ export class VectorTileRenderLayer extends OverlayLayer {
         });
     }
 }
-Object.defineProperty(VectorTileRenderLayer, "_textureCache", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Map()
-});
-Object.defineProperty(VectorTileRenderLayer, "_geometryCache", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Map()
-});
-Object.defineProperty(VectorTileRenderLayer, "_materialCache", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Map()
-}); // 共享材质缓存
 /**
  * Merged Feature Proxy Class
  * 合并要素代理类
@@ -933,6 +893,7 @@ Object.defineProperty(VectorTileRenderLayer, "_materialCache", {
  * 不持有自己的几何体。
  */
 class MergedFeature extends Feature {
+    _sharedMesh; // Reference to shared mesh (only on the first feature of a batch)
     // private _startIndex: number;   // Start index in the buffer
     // private _vertexCount: number;  // Vertex count in the buffer
     /**
@@ -951,12 +912,6 @@ class MergedFeature extends Feature {
         }
         // console.log("MergedFeature constructor", options);
         super(options);
-        Object.defineProperty(this, "_sharedMesh", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        }); // Reference to shared mesh (only on the first feature of a batch)
         this._sharedMesh = sharedMesh;
         // this.id = options.id; // Handled by super
         // this.userData = options.userData; // Handled by super

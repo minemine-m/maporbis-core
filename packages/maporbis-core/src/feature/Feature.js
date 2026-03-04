@@ -33,6 +33,73 @@ import { FeaturePaintManager } from './internal/FeatureStyleManager';
  */
 export class Feature extends Handlerable(EventMixin(BaseMixin(Object3D))) {
     /**
+     * Feature position (single coordinate or array of coordinates).
+     * 要素位置（单个坐标或坐标数组）
+     */
+    _worldCoordinates;
+    /**
+     * Three.js geometry object.
+     * Three.js几何对象
+     */
+    _renderObject;
+    /**
+     * GeoJSON geometry data.
+     * GeoJSON几何数据
+     */
+    _geometry;
+    /**
+     * The layer this feature belongs to.
+     * 所属图层
+     */
+    _layer;
+    /**
+     * Current paint.
+     * 当前样式
+     */
+    _paint;
+    /**
+     * Feature ID.
+     * 要素ID
+     */
+    _id;
+    /**
+     * Internal paint manager.
+     * 内部样式管理器
+     */
+    _paintManager;
+    /**
+     * Internal bloom helper.
+     * 内部发光效果辅助器
+     */
+    /**
+     * Whether geometry is currently initializing.
+     * 是否正在初始化几何体
+     */
+    _isGeometryInitializing = false;
+    /**
+     * Internal collision configuration.
+     * 内部碰撞配置
+     */
+    _collisionConfig = {
+        enabled: false,
+        priority: 50,
+        padding: 4
+    };
+    /**
+     * Collision state.
+     * 碰撞状态
+     */
+    _collisionState = {
+        visible: true,
+        reason: CollisionReason.NO_COLLISION,
+        collidedWith: [],
+        timestamp: Date.now()
+    };
+    /**
+     * Animation reference ID.
+     */
+    _animationRef = null;
+    /**
      * Create a feature instance.
      * 创建要素实例
      *
@@ -41,128 +108,6 @@ export class Feature extends Handlerable(EventMixin(BaseMixin(Object3D))) {
      */
     constructor(options) {
         super();
-        /**
-         * Feature position (single coordinate or array of coordinates).
-         * 要素位置（单个坐标或坐标数组）
-         */
-        Object.defineProperty(this, "_worldCoordinates", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Three.js geometry object.
-         * Three.js几何对象
-         */
-        Object.defineProperty(this, "_renderObject", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * GeoJSON geometry data.
-         * GeoJSON几何数据
-         */
-        Object.defineProperty(this, "_geometry", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * The layer this feature belongs to.
-         * 所属图层
-         */
-        Object.defineProperty(this, "_layer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Current paint.
-         * 当前样式
-         */
-        Object.defineProperty(this, "_paint", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Feature ID.
-         * 要素ID
-         */
-        Object.defineProperty(this, "_id", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Internal paint manager.
-         * 内部样式管理器
-         */
-        Object.defineProperty(this, "_paintManager", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Internal bloom helper.
-         * 内部发光效果辅助器
-         */
-        /**
-         * Whether geometry is currently initializing.
-         * 是否正在初始化几何体
-         */
-        Object.defineProperty(this, "_isGeometryInitializing", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /**
-         * Internal collision configuration.
-         * 内部碰撞配置
-         */
-        Object.defineProperty(this, "_collisionConfig", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                enabled: false,
-                priority: 50,
-                padding: 4
-            }
-        });
-        /**
-         * Collision state.
-         * 碰撞状态
-         */
-        Object.defineProperty(this, "_collisionState", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                visible: true,
-                reason: CollisionReason.NO_COLLISION,
-                collidedWith: [],
-                timestamp: Date.now()
-            }
-        });
-        /**
-         * Animation reference ID.
-         */
-        Object.defineProperty(this, "_animationRef", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
         requireParam(options.geometry, "geometry", "geometry must be specified");
         this._geometry = options.geometry;
         this._worldCoordinates = new Vector3(0, 0, 0);

@@ -11,6 +11,31 @@ import { CollisionReason } from '../../core/collision/types/CollisionTypes';
  * @internal
  */
 export class FeatureCollisionHelper {
+    /** Collision state. 碰撞状态 */
+    _collisionState = {
+        visible: true,
+        reason: CollisionReason.NO_COLLISION,
+        collidedWith: [],
+        timestamp: Date.now()
+    };
+    /** Collision detection configuration. 碰撞检测配置 */
+    _collisionConfig = {
+        enabled: true,
+        priority: 50,
+        padding: 4,
+        minZoom: 0,
+        maxZoom: 24
+    };
+    /** Animation reference ID. 动画引用标识 */
+    _animationRef = null;
+    /** Feature ID. 要素ID */
+    _featureId;
+    /** Render object getter. 渲染对象获取器 */
+    _getRenderObject;
+    /** Feature visibility setter. 要素可见性设置器 */
+    _setFeatureVisibility;
+    /** Feature alpha setter. 要素透明度设置器 */
+    _setFeatureAlpha;
     /**
      * Create a collision helper instance.
      * 创建碰撞辅助实例
@@ -21,66 +46,6 @@ export class FeatureCollisionHelper {
      * @param setAlpha - Function to set feature alpha. 设置要素透明度的函数
      */
     constructor(featureId, getRenderObject, setVisibility, setAlpha) {
-        /** Collision state. 碰撞状态 */
-        Object.defineProperty(this, "_collisionState", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                visible: true,
-                reason: CollisionReason.NO_COLLISION,
-                collidedWith: [],
-                timestamp: Date.now()
-            }
-        });
-        /** Collision detection configuration. 碰撞检测配置 */
-        Object.defineProperty(this, "_collisionConfig", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                enabled: true,
-                priority: 50,
-                padding: 4,
-                minZoom: 0,
-                maxZoom: 24
-            }
-        });
-        /** Animation reference ID. 动画引用标识 */
-        Object.defineProperty(this, "_animationRef", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /** Feature ID. 要素ID */
-        Object.defineProperty(this, "_featureId", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Render object getter. 渲染对象获取器 */
-        Object.defineProperty(this, "_getRenderObject", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Feature visibility setter. 要素可见性设置器 */
-        Object.defineProperty(this, "_setFeatureVisibility", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** Feature alpha setter. 要素透明度设置器 */
-        Object.defineProperty(this, "_setFeatureAlpha", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this._featureId = featureId;
         this._getRenderObject = getRenderObject;
         this._setFeatureVisibility = setVisibility;

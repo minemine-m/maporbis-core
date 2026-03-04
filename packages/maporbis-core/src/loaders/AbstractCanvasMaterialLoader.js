@@ -7,18 +7,10 @@ import { AbstractMaterialLoader } from "./AbstractMaterialLoader";
  * @description 用于程序化生成纹理 (Procedural Textures)
  */
 export class AbstractCanvasMaterialLoader extends AbstractMaterialLoader {
-    constructor() {
-        super(...arguments);
-        Object.defineProperty(this, "info", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                version: "1.0.0",
-                description: "Abstract loader for generating procedural canvas textures.",
-            }
-        });
-    }
+    info = {
+        version: "1.0.0",
+        description: "Abstract loader for generating procedural canvas textures.",
+    };
     /**
      * 重写 load 方法以支持 Canvas 特有的材质创建逻辑
      * @param context

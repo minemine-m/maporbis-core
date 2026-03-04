@@ -24,36 +24,16 @@ export function EventMixin(Base) {
     return class extends Base {
         constructor(...args) {
             super(...args);
-            /** Event class instance. 事件类实例 */
-            Object.defineProperty(this, "eventClass", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: new EventClass()
-            });
-            /** Subscribe to event. 订阅事件 */
-            Object.defineProperty(this, "on", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: this.eventClass.on.bind(this.eventClass)
-            });
-            /** Fire an event. 触发事件 */
-            Object.defineProperty(this, "fire", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: this.eventClass.fire.bind(this.eventClass)
-            });
-            /** Unsubscribe from event. 取消订阅 */
-            Object.defineProperty(this, "off", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: this.eventClass.off.bind(this.eventClass)
-            });
             this.eventClass = new EventClass();
         }
+        /** Event class instance. 事件类实例 */
+        eventClass = new EventClass();
+        /** Subscribe to event. 订阅事件 */
+        on = this.eventClass.on.bind(this.eventClass);
+        /** Fire an event. 触发事件 */
+        fire = this.eventClass.fire.bind(this.eventClass);
+        /** Unsubscribe from event. 取消订阅 */
+        off = this.eventClass.off.bind(this.eventClass);
     };
 }
 /**
@@ -77,36 +57,16 @@ export function EventMixin(Base) {
  */
 export function BaseMixin(Base) {
     return class extends Base {
+        /** 类的配置选项 */
+        options;
+        //@internal
+        _isUpdatingOptions;
+        //@internal
+        _initHooksCalled;
+        //@internal
+        _initHooks;
         constructor(...args) {
             super(...args); // 允许参数向上传递
-            /** 类的配置选项 */
-            Object.defineProperty(this, "options", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: void 0
-            });
-            //@internal
-            Object.defineProperty(this, "_isUpdatingOptions", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: void 0
-            });
-            //@internal
-            Object.defineProperty(this, "_initHooksCalled", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: void 0
-            });
-            //@internal
-            Object.defineProperty(this, "_initHooks", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: void 0
-            });
             // this.options = (args[0] || {}) as S;
             // Merge prototype defaults and passed arguments
             // 合并原型默认值和传入参数

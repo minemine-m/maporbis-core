@@ -24,6 +24,16 @@ const registeredModes = {};
  * - 向外触发：drawstart / drawvertex / drawend / drawing 等事件
  */
 export class DrawTool extends MapTool {
+    /** 当前模式定义 */
+    _modeDef;
+    /** 当前绘制中的顶点序列 */
+    _clickCoords = [];
+    /** 是否正在绘制中 */
+    _isDrawing = false;
+    /** 当前绘制中的几何对象（由 mode.create/create 返回） */
+    _geometry;
+    /** 内部统一草图图层 */
+    _draftLayer;
     /**
      * 注册一个绘制模式
      */
@@ -39,41 +49,6 @@ export class DrawTool extends MapTool {
     constructor(options) {
         // 交给 MapTool/BaseMixin 处理 options
         super(options);
-        /** 当前模式定义 */
-        Object.defineProperty(this, "_modeDef", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** 当前绘制中的顶点序列 */
-        Object.defineProperty(this, "_clickCoords", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /** 是否正在绘制中 */
-        Object.defineProperty(this, "_isDrawing", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** 当前绘制中的几何对象（由 mode.create/create 返回） */
-        Object.defineProperty(this, "_geometry", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** 内部统一草图图层 */
-        Object.defineProperty(this, "_draftLayer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         // 设置默认值
         this.options.once = this.options.once ?? false;
         this._ensureMode();

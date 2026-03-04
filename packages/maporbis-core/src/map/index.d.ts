@@ -133,7 +133,7 @@ declare const Map_base: {
         _proxyOptions(): /*elided*/ any;
         _callInitHooks(): /*elided*/ any;
         setOptions(options: import("../core/mixins").ClassOptions): /*elided*/ any;
-        configure(conf?: string | import("../core/mixins").ClassOptions, value?: any): import("../core/mixins").ClassOptions | /*elided*/ any;
+        configure(conf?: string | import("../core/mixins").ClassOptions, value?: any): /*elided*/ any | import("../core/mixins").ClassOptions;
         onOptionsChange(_conf: import("../core/mixins").ClassOptions): void;
         _visitInitHooks(proto: {
             _initHooks: any;

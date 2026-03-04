@@ -24,6 +24,16 @@ import { Line2, LineMaterial, LineGeometry } from 'three-stdlib';
  */
 export class Line extends Feature {
     /**
+     * Base type identifier.
+     * 基础类型标识
+     */
+    _baseType = "Line";
+    /**
+     * Array of vertex coordinates.
+     * 顶点坐标数组
+     */
+    _vertexPoints;
+    /**
      * Create a Line feature instance.
      * 创建线要素实例
      *
@@ -32,26 +42,6 @@ export class Line extends Feature {
      */
     constructor(options) {
         super(options);
-        /**
-         * Base type identifier.
-         * 基础类型标识
-         */
-        Object.defineProperty(this, "_baseType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "Line"
-        });
-        /**
-         * Array of vertex coordinates.
-         * 顶点坐标数组
-         */
-        Object.defineProperty(this, "_vertexPoints", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this._renderObject = this._createRenderObject();
         this._vertexPoints = [0, 0, 0];
         if (this._paint) {

@@ -11,35 +11,15 @@ const WORKER_THREAD_COUNT = 10;
  * @class MapboxRGBLoader
  */
 export class MapboxRGBLoader extends AbstractGeometryLoader {
+    info = {
+        version: "1.0.0",
+        description: "Mapbox-RGB terrain loader for loading elevation data encoded in RGB textures.",
+    };
+    dataType = "terrain-rgb";
+    imageLoader = new ImageLoader(TileLoaderFactory.manager);
+    workerPool = new WorkerPool(0);
     constructor() {
         super();
-        Object.defineProperty(this, "info", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                version: "1.0.0",
-                description: "Mapbox-RGB terrain loader for loading elevation data encoded in RGB textures.",
-            }
-        });
-        Object.defineProperty(this, "dataType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "terrain-rgb"
-        });
-        Object.defineProperty(this, "imageLoader", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new ImageLoader(TileLoaderFactory.manager)
-        });
-        Object.defineProperty(this, "workerPool", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new WorkerPool(0)
-        });
         this.workerPool.setWorkerCreator(() => new ParseWorker());
     }
     /**

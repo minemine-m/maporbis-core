@@ -11,6 +11,9 @@ import { quadtree } from 'd3-quadtree';
   * @category Core
  */
 export class QuadTreeManager {
+    //@ts-ignore
+    _quadtree;
+    _viewport;
     /**
      * Constructor
      * 构造函数
@@ -19,19 +22,6 @@ export class QuadTreeManager {
      *                 视口尺寸，定义四叉树的边界范围
      */
     constructor(viewport) {
-        //@ts-ignore
-        Object.defineProperty(this, "_quadtree", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_viewport", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this._viewport = viewport;
         this._rebuildQuadTree();
     }

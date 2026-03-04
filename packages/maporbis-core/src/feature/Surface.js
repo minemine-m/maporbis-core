@@ -24,6 +24,16 @@ import { Line2, LineMaterial, LineGeometry } from 'three-stdlib';
  */
 export class Surface extends Feature {
     /**
+     * Base type identifier.
+     * 基础类型标识
+     */
+    _baseType = "Surface";
+    /**
+     * Array of vertex coordinates.
+     * 顶点坐标数组
+     */
+    _vertexPoints;
+    /**
      * Create a Surface feature instance.
      * 创建表面要素实例
      *
@@ -32,26 +42,6 @@ export class Surface extends Feature {
      */
     constructor(options) {
         super(options);
-        /**
-         * Base type identifier.
-         * 基础类型标识
-         */
-        Object.defineProperty(this, "_baseType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "Surface"
-        });
-        /**
-         * Array of vertex coordinates.
-         * 顶点坐标数组
-         */
-        Object.defineProperty(this, "_vertexPoints", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this._buildRenderObject();
         this._vertexPoints = [0, 0, 0];
         if (this._paint && this._renderObject) {

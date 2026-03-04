@@ -7,25 +7,13 @@ import { EventDispatcher } from 'three';
   * @category Core
  */
 export class EventClass {
-    constructor() {
-        /** Three.js事件分发器实例 */
-        Object.defineProperty(this, "_dispatcher", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new EventDispatcher()
-        });
-        /**
-         * 监听器映射表
-         * 结构: { 事件类型: { 原始监听器: 包装函数 } }
-         */
-        Object.defineProperty(this, "_listenerMap", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Map()
-        });
-    }
+    /** Three.js事件分发器实例 */
+    _dispatcher = new EventDispatcher();
+    /**
+     * 监听器映射表
+     * 结构: { 事件类型: { 原始监听器: 包装函数 } }
+     */
+    _listenerMap = new Map();
     /**
      * 订阅事件
      * @param type 事件类型

@@ -26,6 +26,35 @@ import { Feature } from '../../feature/Feature';
   * @category Core
  */
 export class CollisionEngine {
+    renderer;
+    _quadTreeManager;
+    _strategyOrchestrator;
+    _performanceMonitor;
+    /**
+     * Registered layers set
+     * 注册的图层集合
+     */
+    _layers = new Set();
+    /**
+     * Collision configuration
+     * 碰撞检测配置
+     */
+    _config;
+    /**
+     * Whether updating (prevent duplicate updates)
+     * 是否正在更新中（防止重复更新）
+     */
+    _isUpdating = false;
+    /**
+     * Last update timestamp
+     * 上次更新时间戳
+     */
+    _lastUpdateTime = 0;
+    /**
+     * Frame counter
+     * 帧计数器
+     */
+    _frameCount = 0;
     /**
      * Create collision detection engine instance
      * 创建碰撞检测引擎实例
@@ -34,80 +63,7 @@ export class CollisionEngine {
      * @param config - Collision detection configuration options 碰撞检测配置选项
      */
     constructor(renderer, config = {}) {
-        Object.defineProperty(this, "renderer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: renderer
-        });
-        Object.defineProperty(this, "_quadTreeManager", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_strategyOrchestrator", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_performanceMonitor", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Registered layers set
-         * 注册的图层集合
-         */
-        Object.defineProperty(this, "_layers", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Set()
-        });
-        /**
-         * Collision configuration
-         * 碰撞检测配置
-         */
-        Object.defineProperty(this, "_config", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Whether updating (prevent duplicate updates)
-         * 是否正在更新中（防止重复更新）
-         */
-        Object.defineProperty(this, "_isUpdating", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /**
-         * Last update timestamp
-         * 上次更新时间戳
-         */
-        Object.defineProperty(this, "_lastUpdateTime", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /**
-         * Frame counter
-         * 帧计数器
-         */
-        Object.defineProperty(this, "_frameCount", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
+        this.renderer = renderer;
         this._config = {
             enabled: true,
             padding: 4,

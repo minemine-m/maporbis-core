@@ -4,23 +4,14 @@
  * @category Paint
  */
 export class LayerPaint {
+    filterEngine;
+    rules;
     /**
      * @param rules Paint rule array or single PaintConfig.
      * @param filterEngine External Feature Filter engine instance
      */
     constructor(rules, filterEngine) {
-        Object.defineProperty(this, "filterEngine", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: filterEngine
-        });
-        Object.defineProperty(this, "rules", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
+        this.filterEngine = filterEngine;
         // If only a single PaintConfig is passed, automatically create a default rule
         if (!Array.isArray(rules)) {
             // Default rule filter is set to true or other expression that matches all features

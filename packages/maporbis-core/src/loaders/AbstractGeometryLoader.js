@@ -6,17 +6,10 @@ import { LoaderUtils } from "./LoaderUtils";
  * @abstract
  */
 export class AbstractGeometryLoader {
-    constructor() {
-        Object.defineProperty(this, "info", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                version: "1.0.0",
-                description: "Abstract geometry loader base class",
-            }
-        });
-    }
+    info = {
+        version: "1.0.0",
+        description: "Abstract geometry loader base class",
+    };
     /**
      * 从数据源加载瓦片几何数据
      * @param context 加载上下文

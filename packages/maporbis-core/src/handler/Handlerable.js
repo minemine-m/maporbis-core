@@ -6,14 +6,9 @@
  */
 export default function (Base) {
     return class Handlerable extends Base {
+        _handlers;
         constructor(...args) {
             super(...args); // 允许参数向上传递
-            Object.defineProperty(this, "_handlers", {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: void 0
-            });
             this._handlers = [];
         }
         /**

@@ -6,17 +6,10 @@ import { LoaderUtils } from "./LoaderUtils";
  * @class AbstractMaterialLoader
  */
 export class AbstractMaterialLoader {
-    constructor() {
-        Object.defineProperty(this, "info", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                version: "1.0.0",
-                description: "Abstract material loader base class",
-            }
-        });
-    }
+    info = {
+        version: "1.0.0",
+        description: "Abstract material loader base class",
+    };
     /**
      * 从数据源加载材质
      * @param context 加载上下文

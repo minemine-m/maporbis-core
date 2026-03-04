@@ -17,6 +17,75 @@ import { Layer } from "../Layer";
  * @category Layer
  */
 export class BaseTileLayer extends Layer {
+    layerId;
+    /**
+     * Whether the layer is a tile layer.
+     * 是否为瓦片图层。
+     * @readonly
+     */
+    isTileLayer = true;
+    /**
+     * Layer type identifier.
+     * 图层类型标识符。
+     * @readonly
+     */
+    layerType = "base";
+    /**
+     * Whether it is a base layer (background map).
+     * 是否是底图。
+     * @readonly
+     */
+    isBaseLayer = false; // Whether it is base layer 是否是底图
+    _enabled = true;
+    _visible = true;
+    /**
+     * Root tile instance.
+     * 根瓦片实例。
+     * @protected
+     */
+    _rootTile; // Root tile instance 根瓦片实例
+    /**
+     * Loader instance.
+     * 加载器实例。
+     * @protected
+     */
+    _loader; // Loader instance 加载器实例
+    _LODThreshold = 1;
+    /**
+     * Whether it is a scene layer (e.g. 3D objects).
+     * 是否是场景图层。
+     * @readonly
+     */
+    isSceneLayer = false;
+    /**
+     * Layer opacity.
+     * 图层透明度。
+     */
+    opacity = 1;
+    // Public properties
+    // 公共属性
+    /**
+     * Layer data source(s).
+     * 图层数据源。
+     * @readonly
+     */
+    source;
+    /**
+     * Layer projection.
+     * 图层投影。
+     * @readonly
+     */
+    projection;
+    /**
+     * Minimum zoom level.
+     * 最小缩放级别。
+     */
+    minLevel = 2;
+    /**
+     * Maximum zoom level.
+     * 最大缩放级别。
+     */
+    maxLevel = 19;
     /**
      * Create a new BaseTileLayer instance.
      * 创建一个新的 BaseTileLayer 实例。
@@ -27,150 +96,7 @@ export class BaseTileLayer extends Layer {
     constructor(layerId, options // Merge all parameters into one config object 合并所有参数为一个配置对象
     ) {
         super(layerId, options);
-        Object.defineProperty(this, "layerId", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: layerId
-        });
-        /**
-         * Whether the layer is a tile layer.
-         * 是否为瓦片图层。
-         * @readonly
-         */
-        Object.defineProperty(this, "isTileLayer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: true
-        });
-        /**
-         * Layer type identifier.
-         * 图层类型标识符。
-         * @readonly
-         */
-        Object.defineProperty(this, "layerType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "base"
-        });
-        /**
-         * Whether it is a base layer (background map).
-         * 是否是底图。
-         * @readonly
-         */
-        Object.defineProperty(this, "isBaseLayer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        }); // Whether it is base layer 是否是底图
-        Object.defineProperty(this, "_enabled", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: true
-        });
-        Object.defineProperty(this, "_visible", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: true
-        });
-        /**
-         * Root tile instance.
-         * 根瓦片实例。
-         * @protected
-         */
-        Object.defineProperty(this, "_rootTile", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        }); // Root tile instance 根瓦片实例
-        /**
-         * Loader instance.
-         * 加载器实例。
-         * @protected
-         */
-        Object.defineProperty(this, "_loader", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        }); // Loader instance 加载器实例
-        Object.defineProperty(this, "_LODThreshold", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 1
-        });
-        /**
-         * Whether it is a scene layer (e.g. 3D objects).
-         * 是否是场景图层。
-         * @readonly
-         */
-        Object.defineProperty(this, "isSceneLayer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /**
-         * Layer opacity.
-         * 图层透明度。
-         */
-        Object.defineProperty(this, "opacity", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 1
-        });
-        // Public properties
-        // 公共属性
-        /**
-         * Layer data source(s).
-         * 图层数据源。
-         * @readonly
-         */
-        Object.defineProperty(this, "source", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Layer projection.
-         * 图层投影。
-         * @readonly
-         */
-        Object.defineProperty(this, "projection", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Minimum zoom level.
-         * 最小缩放级别。
-         */
-        Object.defineProperty(this, "minLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 2
-        });
-        /**
-         * Maximum zoom level.
-         * 最大缩放级别。
-         */
-        Object.defineProperty(this, "maxLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 19
-        });
+        this.layerId = layerId;
         if (!options.projection) {
             throw new Error(`BaseTileLayer: options.projection is required for layer '${layerId}'. BaseTileLayer: 图层 '${layerId}' 需要提供 projection 选项。`);
         }

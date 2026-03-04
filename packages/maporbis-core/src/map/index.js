@@ -40,6 +40,51 @@ const options = {};
  */
 export class Map extends Handlerable(EventMixin(BaseMixin(EmptyClass))) {
     /**
+     * SceneRenderer instance.
+     * 场景渲染器实例
+     */
+    sceneRenderer;
+    /**
+     * Map root object
+     * 地图根对象
+     */
+    _rootGroup = new Group();
+    /**
+     * Map layers
+     * 地图图层
+     */
+    _layers = new globalThis.Map();
+    /**
+     * Map projection
+     * 地图投影
+     */
+    _mapProjection = new ProjMCT(0);
+    /**
+     * Update clock
+     * 更新时钟
+     */
+    _animationClock = new Clock();
+    /**
+     * Whether to automatically update
+     * 是否自动更新
+     */
+    autoUpdate = true;
+    /**
+     * Update interval (ms)
+     * 更新间隔（毫秒）
+     */
+    updateInterval = 100;
+    /**
+     * Min zoom level
+     * 最小缩放级别
+     */
+    minLevel = 2;
+    /**
+     * Max zoom level
+     * 最大缩放级别
+     */
+    maxLevel = 19;
+    /**
      * Get map projection.
      * 获取地图投影
      *
@@ -131,6 +176,92 @@ export class Map extends Handlerable(EventMixin(BaseMixin(EmptyClass))) {
         return getLocalInfoFromScreen(this.sceneRenderer.camera, this, point);
     }
     /**
+     * Map center coordinates.
+
+     * 地图中心点坐标
+     */
+    center;
+    /**
+     * Projected map center coordinates.
+     * 投影后的地图中心点坐标
+     */
+    prjcenter;
+    // Note: _layerContainer reserved for future use
+    // private _layerContainer!: LayerContainer;
+    /**
+     * Event map table.
+     * 事件映射表
+     */
+    _eventState = {
+        load: { listened: false }, // Load event parameters 加载事件参数
+    };
+    /**
+     * Canvas manager instance.
+     * 画布管理器实例
+     */
+    _canvasMgr = new CanvasManager();
+    /**
+     * Collision engine instance.
+     * 碰撞引擎实例
+     */
+    _collisionEngine;
+    /**
+     * Load hook function array.
+     * 加载钩子函数数组
+     */
+    //@ts-ignore
+    _onLoadHooks;
+    // === Zoom related state (View level, decoupled from tile LOD) ===
+    // === 缩放相关状态（视图级别，与瓦片 LOD 解耦） ===
+    /**
+     * Minimum/Maximum allowed zoom level for view (Configurable externally, only used for clipping logic).
+     * 视图允许的最小/最大缩放级别（对外可配置，只用于裁剪逻辑）
+     */
+    _minZoom = 0;
+    _maxZoom = 22;
+    /**
+     * Internal global zoom scale (Determines relation between zoom and distance, only for setZoom camera pushing).
+     * 内部使用的全局 zoom 标尺（决定 zoom 与距离的关系，仅用于 setZoom 推相机）
+     */
+    _ZOOM_MIN_CONST = 0;
+    _ZOOM_MAX_CONST = 22;
+    /**
+     * Nearest/Farthest allowed camera distance during zoom (Used for mapping).
+     * 缩放时相机允许的最近/最远距离（用于映射）
+     */
+    _minZoomDistance = 500;
+    _maxZoomDistance = 80000;
+    /**
+     * Whether currently in zoom interaction.
+     * 当前是否处于缩放交互中
+     */
+    _isZooming = false;
+    /**
+     * Start zoom value of current zoom operation.
+     * 本次缩放起始 zoom 值
+     */
+    _zoomStartValue = 0;
+    /**
+     * Last recorded zoom (Used for control events).
+     * 上一次记录的 zoom（用于控制器事件）
+     */
+    _lastZoomForControls = 0;
+    /**
+     * "Extra zoom levels" beyond data levels (Overzoom count).
+     * 超出数据层级后的“额外 zoom 级数”（overzoom 计数）
+     */
+    _overZoom = 0;
+    /**
+     * Record camera distance to target in previous frame, used to determine zoom in/out direction.
+     * 记录上一帧相机到目标点的距离，用于判断放大/缩小方向
+     */
+    _lastCameraDistance = 0;
+    /**
+     * Model features collection for animation updates (Pro feature placeholder).
+     * 模型要素集合，用于动画更新（Pro 功能占位）
+     */
+    _modelFeatures = [];
+    /**
      * Create map instance.
      * 创建地图实例
      *
@@ -166,272 +297,6 @@ export class Map extends Handlerable(EventMixin(BaseMixin(EmptyClass))) {
             source: { ...defaultOptions.source, ...options.source },
         };
         super(opts);
-        /**
-         * SceneRenderer instance.
-         * 场景渲染器实例
-         */
-        Object.defineProperty(this, "sceneRenderer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Map root object
-         * 地图根对象
-         */
-        Object.defineProperty(this, "_rootGroup", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Group()
-        });
-        /**
-         * Map layers
-         * 地图图层
-         */
-        Object.defineProperty(this, "_layers", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new globalThis.Map()
-        });
-        /**
-         * Map projection
-         * 地图投影
-         */
-        Object.defineProperty(this, "_mapProjection", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new ProjMCT(0)
-        });
-        /**
-         * Update clock
-         * 更新时钟
-         */
-        Object.defineProperty(this, "_animationClock", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Clock()
-        });
-        /**
-         * Whether to automatically update
-         * 是否自动更新
-         */
-        Object.defineProperty(this, "autoUpdate", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: true
-        });
-        /**
-         * Update interval (ms)
-         * 更新间隔（毫秒）
-         */
-        Object.defineProperty(this, "updateInterval", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 100
-        });
-        /**
-         * Min zoom level
-         * 最小缩放级别
-         */
-        Object.defineProperty(this, "minLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 2
-        });
-        /**
-         * Max zoom level
-         * 最大缩放级别
-         */
-        Object.defineProperty(this, "maxLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 19
-        });
-        /**
-         * Map center coordinates.
-    
-         * 地图中心点坐标
-         */
-        Object.defineProperty(this, "center", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Projected map center coordinates.
-         * 投影后的地图中心点坐标
-         */
-        Object.defineProperty(this, "prjcenter", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        // Note: _layerContainer reserved for future use
-        // private _layerContainer!: LayerContainer;
-        /**
-         * Event map table.
-         * 事件映射表
-         */
-        Object.defineProperty(this, "_eventState", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                load: { listened: false }, // Load event parameters 加载事件参数
-            }
-        });
-        /**
-         * Canvas manager instance.
-         * 画布管理器实例
-         */
-        Object.defineProperty(this, "_canvasMgr", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new CanvasManager()
-        });
-        /**
-         * Collision engine instance.
-         * 碰撞引擎实例
-         */
-        Object.defineProperty(this, "_collisionEngine", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Load hook function array.
-         * 加载钩子函数数组
-         */
-        //@ts-ignore
-        Object.defineProperty(this, "_onLoadHooks", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        // === Zoom related state (View level, decoupled from tile LOD) ===
-        // === 缩放相关状态（视图级别，与瓦片 LOD 解耦） ===
-        /**
-         * Minimum/Maximum allowed zoom level for view (Configurable externally, only used for clipping logic).
-         * 视图允许的最小/最大缩放级别（对外可配置，只用于裁剪逻辑）
-         */
-        Object.defineProperty(this, "_minZoom", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        Object.defineProperty(this, "_maxZoom", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 22
-        });
-        /**
-         * Internal global zoom scale (Determines relation between zoom and distance, only for setZoom camera pushing).
-         * 内部使用的全局 zoom 标尺（决定 zoom 与距离的关系，仅用于 setZoom 推相机）
-         */
-        Object.defineProperty(this, "_ZOOM_MIN_CONST", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        Object.defineProperty(this, "_ZOOM_MAX_CONST", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 22
-        });
-        /**
-         * Nearest/Farthest allowed camera distance during zoom (Used for mapping).
-         * 缩放时相机允许的最近/最远距离（用于映射）
-         */
-        Object.defineProperty(this, "_minZoomDistance", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 500
-        });
-        Object.defineProperty(this, "_maxZoomDistance", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 80000
-        });
-        /**
-         * Whether currently in zoom interaction.
-         * 当前是否处于缩放交互中
-         */
-        Object.defineProperty(this, "_isZooming", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /**
-         * Start zoom value of current zoom operation.
-         * 本次缩放起始 zoom 值
-         */
-        Object.defineProperty(this, "_zoomStartValue", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /**
-         * Last recorded zoom (Used for control events).
-         * 上一次记录的 zoom（用于控制器事件）
-         */
-        Object.defineProperty(this, "_lastZoomForControls", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /**
-         * "Extra zoom levels" beyond data levels (Overzoom count).
-         * 超出数据层级后的“额外 zoom 级数”（overzoom 计数）
-         */
-        Object.defineProperty(this, "_overZoom", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /**
-         * Record camera distance to target in previous frame, used to determine zoom in/out direction.
-         * 记录上一帧相机到目标点的距离，用于判断放大/缩小方向
-         */
-        Object.defineProperty(this, "_lastCameraDistance", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /**
-         * Model features collection for animation updates (Pro feature placeholder).
-         * 模型要素集合，用于动画更新（Pro 功能占位）
-         */
-        Object.defineProperty(this, "_modelFeatures", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
         this.initMap(opts.source ?? {});
         // Register default tile loaders
         registerDefaultLoaders();

@@ -14,29 +14,16 @@ import { Layer } from "../layer/Layer";
   * @category Layer
  */
 export class LayerContainer extends Group {
-    constructor() {
-        super(...arguments);
-        /**
-         * Collection of layer instances.
-         * 存储图层实例的集合
-         */
-        Object.defineProperty(this, "_layers", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Set()
-        });
-        /**
-         * Collection of layer IDs for fast lookup.
-         * 存储图层ID的集合，用于快速查找
-         */
-        Object.defineProperty(this, "_layerids", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Set()
-        });
-    }
+    /**
+     * Collection of layer instances.
+     * 存储图层实例的集合
+     */
+    _layers = new Set();
+    /**
+     * Collection of layer IDs for fast lookup.
+     * 存储图层ID的集合，用于快速查找
+     */
+    _layerids = new Set();
     /**
      * Add layers to the container.
      * 添加图层到容器

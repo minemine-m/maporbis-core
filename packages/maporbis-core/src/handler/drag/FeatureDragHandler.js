@@ -6,43 +6,15 @@ import Handler from "../Handler";
   * @category Handler
  */
 export class FeatureDragHandler extends Handler {
-    constructor() {
-        super(...arguments);
-        Object.defineProperty(this, "_isDragging", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        Object.defineProperty(this, "_lastCoord", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: null
-        });
-        /**
-         * Save bound function references to ensure correct removal of event listeners
-         * 保存绑定后的函数引用，确保能正确移除事件监听器
-         */
-        Object.defineProperty(this, "_boundOnMouseDown", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: this._onMouseDown.bind(this)
-        });
-        Object.defineProperty(this, "_boundOnMouseMove", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: this._onMouseMove.bind(this)
-        });
-        Object.defineProperty(this, "_boundOnMouseUp", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: this._onMouseUp.bind(this)
-        });
-    }
+    _isDragging = false;
+    _lastCoord = null;
+    /**
+     * Save bound function references to ensure correct removal of event listeners
+     * 保存绑定后的函数引用，确保能正确移除事件监听器
+     */
+    _boundOnMouseDown = this._onMouseDown.bind(this);
+    _boundOnMouseMove = this._onMouseMove.bind(this);
+    _boundOnMouseUp = this._onMouseUp.bind(this);
     /**
      * Add event hooks
      * 添加事件钩子

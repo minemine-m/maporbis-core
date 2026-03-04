@@ -10,32 +10,17 @@ class EmptyBase {
  * - 保证同一张地图同时只存在一个激活工具
  */
 export class MapTool extends EventMixin(BaseMixin(EmptyBase)) {
+    /** 绑定的地图实例 */
+    _map;
+    /** 是否启用中 */
+    _enabled = false;
+    /** 缓存绑定到 Map 上的事件处理函数，便于 off 时移除 */
+    _boundHandlers = new Map();
     /**
      * @param options 工具配置
      */
     constructor(options = {}) {
         super(options);
-        /** 绑定的地图实例 */
-        Object.defineProperty(this, "_map", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /** 是否启用中 */
-        Object.defineProperty(this, "_enabled", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** 缓存绑定到 Map 上的事件处理函数，便于 off 时移除 */
-        Object.defineProperty(this, "_boundHandlers", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Map()
-        });
     }
     /**
      * 将工具添加到地图上，并自动启用。

@@ -4,6 +4,11 @@ import { TileLoadingManager } from "./LoaderInterfaces";
  * @description 管理和检索各种类型的瓦片加载器 (Geometry, Material, Mesh)
  */
 export class TileLoaderFactory {
+    static manager = new TileLoadingManager();
+    // 存储加载器实例的 Map
+    static geometryLoaders = new Map();
+    static materialLoaders = new Map();
+    static meshLoaders = new Map(); // 复用 IGeometryLoader 接口?
     /**
      * 注册材质加载器
      * @param loader
@@ -67,28 +72,3 @@ export class TileLoaderFactory {
         }
     }
 }
-Object.defineProperty(TileLoaderFactory, "manager", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new TileLoadingManager()
-});
-// 存储加载器实例的 Map
-Object.defineProperty(TileLoaderFactory, "geometryLoaders", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Map()
-});
-Object.defineProperty(TileLoaderFactory, "materialLoaders", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Map()
-});
-Object.defineProperty(TileLoaderFactory, "meshLoaders", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Map()
-}); // 复用 IGeometryLoader 接口?

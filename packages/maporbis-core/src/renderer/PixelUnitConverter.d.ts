@@ -89,4 +89,4 @@ declare class PixelUnitConverter {
      */
     update(): void;
 }
-export { PixelUnitConverter, ConversionOptions };
+export { PixelUnitConverter, type ConversionOptions };

@@ -10,37 +10,12 @@ import { PerspectiveCamera, OrthographicCamera } from 'three';
  * 处理不同相机类型（透视/正交）的坐标系转换。
  */
 class PixelUnitConverter {
+    camera;
+    renderer;
+    container;
+    cache;
+    resizeObserver;
     constructor(camera, renderer, container) {
-        Object.defineProperty(this, "camera", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "renderer", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "container", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "cache", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "resizeObserver", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this.camera = camera;
         this.renderer = renderer;
         this.container = container;

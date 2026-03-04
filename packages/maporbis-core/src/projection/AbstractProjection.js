@@ -6,6 +6,7 @@
  * @description 提供了投影系统的基础实现，具体投影算法由子类实现。
  */
 export class AbstractProjection {
+    _centralMeridian = 0;
     /**
      * 获取中央经线
      */
@@ -17,12 +18,6 @@ export class AbstractProjection {
      * @param centralMeridian 中央经线，默认为 0
      */
     constructor(centralMeridian = 0) {
-        Object.defineProperty(this, "_centralMeridian", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
         this._centralMeridian = centralMeridian;
     }
     /**

@@ -7,6 +7,16 @@ import { normalizeAnchor } from "../types";
   * @category UI
  */
 export class ToolTip extends UIComponent {
+    _content;
+    _timeoutId;
+    _boundOnOwnerMove = (e) => this._onOwnerMove(e);
+    _boundOnOwnerOut = () => this._onOwnerOut();
+    _boundOnOwnerRemoved = () => this._onOwnerRemoved();
+    /**
+     * Coordinate for standalone mode
+     * 独立模式坐标
+     */
+    _standaloneCoord;
     /**
      * @param options ToolTip options ToolTip 配置
      */
@@ -14,46 +24,6 @@ export class ToolTip extends UIComponent {
         super({
             single: false, // tooltip usually not global singleton tooltip 通常不做全局单例
             ...options,
-        });
-        Object.defineProperty(this, "_content", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_timeoutId", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_boundOnOwnerMove", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: (e) => this._onOwnerMove(e)
-        });
-        Object.defineProperty(this, "_boundOnOwnerOut", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: () => this._onOwnerOut()
-        });
-        Object.defineProperty(this, "_boundOnOwnerRemoved", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: () => this._onOwnerRemoved()
-        });
-        /**
-         * Coordinate for standalone mode
-         * 独立模式坐标
-         */
-        Object.defineProperty(this, "_standaloneCoord", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
         });
         this._content = options.content;
     }

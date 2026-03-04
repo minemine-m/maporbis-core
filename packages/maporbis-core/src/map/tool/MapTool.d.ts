@@ -24,7 +24,7 @@ declare const MapTool_base: {
         _proxyOptions(): /*elided*/ any;
         _callInitHooks(): /*elided*/ any;
         setOptions(options: ClassOptions): /*elided*/ any;
-        configure(conf?: string | ClassOptions, value?: any): /*elided*/ any | ClassOptions;
+        configure(conf?: string | ClassOptions, value?: any): ClassOptions | /*elided*/ any;
         onOptionsChange(_conf: ClassOptions): void;
         _visitInitHooks(proto: {
             _initHooks: any;

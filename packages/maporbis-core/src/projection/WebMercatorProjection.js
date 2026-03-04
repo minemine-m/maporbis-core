@@ -5,32 +5,15 @@ import { AbstractProjection } from "./AbstractProjection";
  * @extends AbstractProjection
  */
 export class WebMercatorProjection extends AbstractProjection {
+    ID = "3857";
+    // private static readonly EARTH_RADIUS = 6378137; // 修正为标准WGS84长半轴，原代码 6378000 可能是简化
+    // 保持原代码的常数以确保完全兼容
+    static LEGACY_EARTH_RADIUS = 6378000;
+    mapWidth = 2 * Math.PI * WebMercatorProjection.LEGACY_EARTH_RADIUS;
+    mapHeight = this.mapWidth;
+    mapDepth = 1;
     constructor(centralMeridian = 0) {
         super(centralMeridian);
-        Object.defineProperty(this, "ID", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "3857"
-        });
-        Object.defineProperty(this, "mapWidth", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 2 * Math.PI * WebMercatorProjection.LEGACY_EARTH_RADIUS
-        });
-        Object.defineProperty(this, "mapHeight", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: this.mapWidth
-        });
-        Object.defineProperty(this, "mapDepth", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 1
-        });
     }
     forward(longitude, latitude) {
         const d2r = Math.PI / 180;
@@ -55,11 +38,3 @@ export class WebMercatorProjection extends AbstractProjection {
         return { lon, lat };
     }
 }
-// private static readonly EARTH_RADIUS = 6378137; // 修正为标准WGS84长半轴，原代码 6378000 可能是简化
-// 保持原代码的常数以确保完全兼容
-Object.defineProperty(WebMercatorProjection, "LEGACY_EARTH_RADIUS", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: 6378000
-});

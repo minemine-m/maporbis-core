@@ -11,27 +11,12 @@ class Base {
  * @protected
  */
 class Handler extends EventMixin(BaseMixin(Base)) {
+    target;
+    dom;
+    //@internal
+    _enabled = false;
     constructor(target) {
         super();
-        Object.defineProperty(this, "target", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "dom", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        //@internal
-        Object.defineProperty(this, "_enabled", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
         this.target = target;
     }
     /**

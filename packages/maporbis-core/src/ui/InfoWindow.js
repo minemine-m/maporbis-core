@@ -8,6 +8,8 @@ import { Vector3, Sprite } from "three";
   * @category UI
  */
 export class InfoWindow extends UIComponent {
+    _titleEl;
+    _contentEl;
     /**
      * @param options InfoWindow options InfoWindow 配置
      */
@@ -15,18 +17,6 @@ export class InfoWindow extends UIComponent {
         super({
             single: true,
             ...options,
-        });
-        Object.defineProperty(this, "_titleEl", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_contentEl", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
         });
     }
     _getClassName() {

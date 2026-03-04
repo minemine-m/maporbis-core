@@ -8,42 +8,22 @@
  */
 export class TerrainMeshBuilder {
     /**
+     * Default grid size (257).
+     * 默认网格大小 (257)。
+     */
+    static DEFAULT_GRID_SIZE = 257;
+    gridSize;
+    numTriangles;
+    numParentTriangles;
+    indices;
+    coords;
+    /**
      * Create a new TerrainMeshBuilder.
      * 创建一个新的 TerrainMeshBuilder。
      *
      * @param gridSize Grid size, must be 2^k + 1. 网格大小，必须是 2^k + 1。
      */
     constructor(gridSize = TerrainMeshBuilder.DEFAULT_GRID_SIZE) {
-        Object.defineProperty(this, "gridSize", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "numTriangles", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "numParentTriangles", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "indices", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "coords", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this.gridSize = gridSize;
         const tileSize = gridSize - 1;
         if (tileSize & (tileSize - 1)) {
@@ -257,13 +237,3 @@ export class TerrainMeshBuilder {
         };
     }
 }
-/**
- * Default grid size (257).
- * 默认网格大小 (257)。
- */
-Object.defineProperty(TerrainMeshBuilder, "DEFAULT_GRID_SIZE", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: 257
-});

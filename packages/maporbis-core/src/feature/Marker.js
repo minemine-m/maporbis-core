@@ -27,6 +27,11 @@ const options = {
  */
 export class Marker extends Point {
     /**
+     * Feature type identifier.
+     * 要素类型标识
+     */
+    _type = 'Marker';
+    /**
      * Create a marker feature instance.
      * 创建标记点要素实例
      *
@@ -34,16 +39,6 @@ export class Marker extends Point {
      */
     constructor(options) {
         super(options);
-        /**
-         * Feature type identifier.
-         * 要素类型标识
-         */
-        Object.defineProperty(this, "_type", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 'Marker'
-        });
     }
     /**
      * Convert feature to Three.js geometry.

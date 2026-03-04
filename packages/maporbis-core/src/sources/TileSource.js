@@ -4,103 +4,38 @@ import { interpolate } from "../utils";
  *  数据源基类，用户可以通过继承此类来自定义数据源
  */
 export class TileSource {
+    /** Data type that determines which loader to use for loading and processing data. Default is "image" type. 决定使用哪个加载器加载和处理数据的类型，默认为"image"类型 */
+    dataType = "image";
+    /** Copyright attribution information for the data source, used for displaying map copyright notices. 数据源版权信息，用于显示地图版权声明 */
+    attribution = "isource";
+    /** Minimum zoom level supported by the data source. Default is 0. 数据源支持的最小缩放级别，默认为0 */
+    minLevel = 0;
+    /** Maximum zoom level supported by the data source. Default is 18. 数据源支持的最大缩放级别，默认为18 */
+    maxLevel = 18;
+    /** Data projection type. Default is "3857" Mercator projection. 数据投影类型，默认为"3857"墨卡托投影 */
+    projectionID = "3857";
+    /** URL template for tile data. Uses variables like {x},{y},{z} to construct tile request URLs. 瓦片数据URL模板，使用{x},{y},{z}等变量构建请求URL */
+    url = "";
+    /** List of URL subdomains for load balancing. Can be an array of strings or a single string. 用于负载均衡的URL子域名列表，可以是字符串数组或单个字符串 */
+    subdomains = [];
+    /** Currently used subdomain. Randomly selected from subdomains when requesting tiles. 当前使用的子域名，请求瓦片时随机选择 */
+    s = "";
+    /** Layer opacity. Range 0-1, default is 1.0 (completely opaque). 图层不透明度，范围0-1，默认1.0（完全不透明） */
+    opacity = 1.0;
+    /** Whether to use TMS tile coordinate system. Default false uses XYZ system, true uses TMS system. 是否使用TMS瓦片坐标系，默认false使用XYZ坐标系，true使用TMS坐标系 */
+    isTMS = false;
+    /** Data bounds in format [minLon, minLat, maxLon, maxLat]. Default covers global range excluding polar regions. 数据范围格式[minLon, minLat, maxLon, maxLat]，默认覆盖全球范围（不含极地） */
+    bounds = [-180, -85, 180, 85];
+    /** Projected data bounds. 投影后的数据范围 */
+    _projectionBounds = [-Infinity, -Infinity, Infinity, Infinity];
+    /** Tile material. 瓦片材质 */
+    tileMaterial;
     /**
      * constructor
      * 构造函数
      * @param options SourceOptions
      */
     constructor(options) {
-        /** Data type that determines which loader to use for loading and processing data. Default is "image" type. 决定使用哪个加载器加载和处理数据的类型，默认为"image"类型 */
-        Object.defineProperty(this, "dataType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "image"
-        });
-        /** Copyright attribution information for the data source, used for displaying map copyright notices. 数据源版权信息，用于显示地图版权声明 */
-        Object.defineProperty(this, "attribution", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "isource"
-        });
-        /** Minimum zoom level supported by the data source. Default is 0. 数据源支持的最小缩放级别，默认为0 */
-        Object.defineProperty(this, "minLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /** Maximum zoom level supported by the data source. Default is 18. 数据源支持的最大缩放级别，默认为18 */
-        Object.defineProperty(this, "maxLevel", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 18
-        });
-        /** Data projection type. Default is "3857" Mercator projection. 数据投影类型，默认为"3857"墨卡托投影 */
-        Object.defineProperty(this, "projectionID", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "3857"
-        });
-        /** URL template for tile data. Uses variables like {x},{y},{z} to construct tile request URLs. 瓦片数据URL模板，使用{x},{y},{z}等变量构建请求URL */
-        Object.defineProperty(this, "url", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: ""
-        });
-        /** List of URL subdomains for load balancing. Can be an array of strings or a single string. 用于负载均衡的URL子域名列表，可以是字符串数组或单个字符串 */
-        Object.defineProperty(this, "subdomains", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /** Currently used subdomain. Randomly selected from subdomains when requesting tiles. 当前使用的子域名，请求瓦片时随机选择 */
-        Object.defineProperty(this, "s", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: ""
-        });
-        /** Layer opacity. Range 0-1, default is 1.0 (completely opaque). 图层不透明度，范围0-1，默认1.0（完全不透明） */
-        Object.defineProperty(this, "opacity", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 1.0
-        });
-        /** Whether to use TMS tile coordinate system. Default false uses XYZ system, true uses TMS system. 是否使用TMS瓦片坐标系，默认false使用XYZ坐标系，true使用TMS坐标系 */
-        Object.defineProperty(this, "isTMS", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /** Data bounds in format [minLon, minLat, maxLon, maxLat]. Default covers global range excluding polar regions. 数据范围格式[minLon, minLat, maxLon, maxLat]，默认覆盖全球范围（不含极地） */
-        Object.defineProperty(this, "bounds", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: [-180, -85, 180, 85]
-        });
-        /** Projected data bounds. 投影后的数据范围 */
-        Object.defineProperty(this, "_projectionBounds", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: [-Infinity, -Infinity, Infinity, Infinity]
-        });
-        /** Tile material. 瓦片材质 */
-        Object.defineProperty(this, "tileMaterial", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         Object.assign(this, options);
     }
     /**

@@ -6,32 +6,10 @@ import { TileLoaderFactory } from "./TileLoaderFactory";
  * @description 负责协调加载瓦片的几何体 (Geometry) 和材质 (Material)
  */
 export class CompositeTileLoader {
-    constructor() {
-        Object.defineProperty(this, "_imgSources", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        Object.defineProperty(this, "_demSource", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_vtSource", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "manager", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: TileLoaderFactory.manager
-        });
-    }
+    _imgSources = [];
+    _demSource;
+    _vtSource;
+    manager = TileLoaderFactory.manager;
     // #region Accessors
     get imgSource() {
         return this._imgSources;

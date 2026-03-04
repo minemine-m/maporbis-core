@@ -19,28 +19,16 @@ import { CollisionReason } from './types/CollisionTypes';
   * @category Core
  */
 export class StrategyOrchestrator {
-    constructor() {
-        /**
-         * Registered strategies map (strategy name -> strategy instance)
-         * 已注册的策略映射表（策略名称 -> 策略实例）
-         */
-        Object.defineProperty(this, "_strategies", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Map()
-        });
-        /**
-         * Strategy execution order array
-         * 策略执行顺序数组
-         */
-        Object.defineProperty(this, "_executionOrder", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-    }
+    /**
+     * Registered strategies map (strategy name -> strategy instance)
+     * 已注册的策略映射表（策略名称 -> 策略实例）
+     */
+    _strategies = new Map();
+    /**
+     * Strategy execution order array
+     * 策略执行顺序数组
+     */
+    _executionOrder = [];
     /**
      * Register collision detection strategy
      * 注册碰撞检测策略

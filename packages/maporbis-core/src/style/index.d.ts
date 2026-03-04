@@ -741,6 +741,6 @@ export declare class Paint {
      */
     static create(input: PaintInput): Paint;
 }
-export { PaintRule } from './Layerstyle';
-export { LayerPaint } from './Layerstyle';
+export type { PaintRule } from './Layerstyle';
+export type { LayerPaint } from './Layerstyle';
 export { matchFilter } from './filter';

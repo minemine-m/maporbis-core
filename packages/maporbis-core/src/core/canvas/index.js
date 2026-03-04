@@ -5,15 +5,8 @@
   * @category Core
  */
 export class CanvasManager {
-    constructor() {
-        /** 画布字典，按尺寸和键名缓存canvas元素 */
-        Object.defineProperty(this, "canvasDict", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {}
-        });
-    }
+    /** 画布字典，按尺寸和键名缓存canvas元素 */
+    canvasDict = {};
     /**
      * 获取指定尺寸的画布
      * @param baseWidth 画布基础宽度（逻辑像素）

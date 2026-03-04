@@ -8,30 +8,12 @@ import { LoaderUtils } from "./LoaderUtils";
  * @description 加载标准 XYZ 瓦片图像 (PNG, JPG, etc.)
  */
 export class WebImageLoader extends AbstractMaterialLoader {
-    constructor() {
-        super(...arguments);
-        Object.defineProperty(this, "info", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: {
-                version: "1.0.0",
-                description: "Loader for standard web images (XYZ tiles).",
-            }
-        });
-        Object.defineProperty(this, "dataType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "image"
-        });
-        Object.defineProperty(this, "loader", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new ImageLoader(TileLoaderFactory.manager)
-        });
-    }
+    info = {
+        version: "1.0.0",
+        description: "Loader for standard web images (XYZ tiles).",
+    };
+    dataType = "image";
+    loader = new ImageLoader(TileLoaderFactory.manager);
     /**
      * 执行加载
      * @param url

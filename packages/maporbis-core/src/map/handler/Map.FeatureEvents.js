@@ -24,54 +24,16 @@ const eventMaps = [
  * 处理地图上要素的交互事件。
  */
 class MapFeatureEventsHandler extends Handler {
-    constructor() {
-        super(...arguments);
-        /**
-         * Store registered event types for easy removal
-         * 存储已注册的事件类型，方便移除时使用
-         */
-        Object.defineProperty(this, "_registeredEvents", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: []
-        });
-        /**
-         * Mouse down timestamp for click detection
-         * 鼠标按下的时间戳，用于点击检测
-         */
-        Object.defineProperty(this, "_mouseDownTime", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 0
-        });
-        /**
-         * Common event handling
-         * 事件公共处理
-         * @param e Event object 事件对象
-         */
-        Object.defineProperty(this, "_eventCommon", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: (e) => {
-                // console.log(e.type, 'Got event 拿到了事件');
-                // Record down time to filter long press click
-                // 记录按下时间，用于过滤长按 click
-                if (e.type === 'mousedown' || e.type === 'touchstart') {
-                    this._mouseDownTime = Date.now();
-                }
-                if (e.type === 'click') {
-                    // Ignore long press (over 300ms) click
-                    // 忽略长按（超过300ms）的点击
-                    if (Date.now() - this._mouseDownTime > 300)
-                        return;
-                }
-                this._handleEvent(e, e.type);
-            }
-        });
-    }
+    /**
+     * Store registered event types for easy removal
+     * 存储已注册的事件类型，方便移除时使用
+     */
+    _registeredEvents = [];
+    /**
+     * Mouse down timestamp for click detection
+     * 鼠标按下的时间戳，用于点击检测
+     */
+    _mouseDownTime = 0;
     /**
      * Add event hooks.
      * 添加事件钩子。
@@ -109,6 +71,26 @@ class MapFeatureEventsHandler extends Handler {
             this._registeredEvents = []; // Clear records 清空记录
         }
     }
+    /**
+     * Common event handling
+     * 事件公共处理
+     * @param e Event object 事件对象
+     */
+    _eventCommon = (e) => {
+        // console.log(e.type, 'Got event 拿到了事件');
+        // Record down time to filter long press click
+        // 记录按下时间，用于过滤长按 click
+        if (e.type === 'mousedown' || e.type === 'touchstart') {
+            this._mouseDownTime = Date.now();
+        }
+        if (e.type === 'click') {
+            // Ignore long press (over 300ms) click
+            // 忽略长按（超过300ms）的点击
+            if (Date.now() - this._mouseDownTime > 300)
+                return;
+        }
+        this._handleEvent(e, e.type);
+    };
     /**
      * Unified event handling
      * 统一事件处理

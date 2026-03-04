@@ -21,6 +21,11 @@ const options = {
  */
 export class LineString extends Line {
     /**
+     * Feature type identifier.
+     * 要素类型标识
+     */
+    _type = 'LineString';
+    /**
      * Create a LineString feature instance.
      * 创建线要素实例
      *
@@ -29,16 +34,6 @@ export class LineString extends Line {
      */
     constructor(options) {
         super(options);
-        /**
-         * Feature type identifier.
-         * 要素类型标识
-         */
-        Object.defineProperty(this, "_type", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 'LineString'
-        });
     }
     /**
      * Convert feature to Three.js geometry.

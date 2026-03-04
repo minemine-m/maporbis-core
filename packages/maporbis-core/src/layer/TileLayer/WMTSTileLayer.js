@@ -13,6 +13,15 @@ import { CompositeTileLoader } from "../../loaders";
  */
 export class WMTSTileLayer extends RasterTileLayer {
     /**
+     * Layer type identifier.
+     * 图层类型标识符。
+     * @readonly
+     */
+    layerType = "wmts";
+    _layerName;
+    _style;
+    _matrixSet;
+    /**
      * Create a new WMTSTileLayer instance.
      * 创建一个新的 WMTSTileLayer 实例。
      *
@@ -21,35 +30,6 @@ export class WMTSTileLayer extends RasterTileLayer {
      */
     constructor(id, options) {
         super(id, options);
-        /**
-         * Layer type identifier.
-         * 图层类型标识符。
-         * @readonly
-         */
-        Object.defineProperty(this, "layerType", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: "wmts"
-        });
-        Object.defineProperty(this, "_layerName", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_style", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "_matrixSet", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         this._layerName = options.layerName;
         this._style = options.style || "default";
         this._matrixSet = options.matrixSet || "GoogleMapsCompatible";

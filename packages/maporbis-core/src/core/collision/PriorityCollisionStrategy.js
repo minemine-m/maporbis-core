@@ -35,48 +35,26 @@ import { QuadTreeManager } from './QuadTreeManager';
   * @category Core
  */
 export class PriorityCollisionStrategy {
-    constructor() {
-        /**
-         * Strategy unique identifier
-         * 策略唯一标识
-         */
-        Object.defineProperty(this, "name", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 'priority'
-        });
-        /**
-         * Whether strategy is enabled
-         * 是否启用该策略
-         */
-        Object.defineProperty(this, "enabled", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: true
-        });
-        /**
-         * Strategy weight (used in multi-strategy combination)
-         * 策略权重（在多策略组合时使用）
-         */
-        Object.defineProperty(this, "weight", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 1.0
-        });
-        /**
-         * Strategy description
-         * 策略描述
-         */
-        Object.defineProperty(this, "description", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: 'Priority-based avoidance strategy, smaller value means higher priority 基于优先级的避让策略，数值越小优先级越高'
-        });
-    }
+    /**
+     * Strategy unique identifier
+     * 策略唯一标识
+     */
+    name = 'priority';
+    /**
+     * Whether strategy is enabled
+     * 是否启用该策略
+     */
+    enabled = true;
+    /**
+     * Strategy weight (used in multi-strategy combination)
+     * 策略权重（在多策略组合时使用）
+     */
+    weight = 1.0;
+    /**
+     * Strategy description
+     * 策略描述
+     */
+    description = 'Priority-based avoidance strategy, smaller value means higher priority 基于优先级的避让策略，数值越小优先级越高';
     /**
      * Execute avoidance detection
      * 执行避让检测

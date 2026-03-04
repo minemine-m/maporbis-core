@@ -22,100 +22,60 @@ class EmptyBase {
  */
 export class UIComponent extends EventMixin(BaseMixin(EmptyBase)) {
     /**
+     * Owner object: Map or Feature.
+     * 所属对象：Map 或 Feature
+     */
+    _owner;
+    /**
+     * Map instance.
+     * 所属地图实例
+     */
+    _map;
+    /**
+     * Current world position.
+     * 当前使用的世界坐标
+     */
+    _worldPosition;
+    /**
+     * Recorded coordinate if passed via show(coordinate).
+     * 如果通过 show(coordinate) 传入了坐标，这里记录下来
+     */
+    _coordinate;
+    /**
+     * Corresponding DOM element.
+     * 对应的 DOM 元素
+     */
+    _dom;
+    /**
+     * Whether currently visible.
+     * 当前是否可见
+     */
+    _visible = false;
+    /**
+     * Cache event handlers bound to Map for removal on off.
+     * 绑定到 Map 的事件处理缓存，便于 off 时移除
+     */
+    _boundMapHandlers = new Map();
+    /**
+     * SceneRenderer update event handler.
+     * 绑定到 SceneRenderer 的 update 事件处理函数
+     */
+    _sceneRendererUpdateHandler;
+    /**
+     * Whether position calculation has been done once (to avoid initial wrong position flicker).
+     * 是否已经完成过一次位置计算（用于避免第一次错误位置闪一下）
+     */
+    _positionedOnce = false;
+    /**
+     * Set of "single" components on the same map for mutual exclusion display.
+     * 同一张地图上的“single”组件集合，用于互斥显示
+     */
+    static _singletons = new Set();
+    /**
      * @param options UI component options UI 组件配置
      */
     constructor(options = {}) {
         super(options);
-        /**
-         * Owner object: Map or Feature.
-         * 所属对象：Map 或 Feature
-         */
-        Object.defineProperty(this, "_owner", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Map instance.
-         * 所属地图实例
-         */
-        Object.defineProperty(this, "_map", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Current world position.
-         * 当前使用的世界坐标
-         */
-        Object.defineProperty(this, "_worldPosition", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Recorded coordinate if passed via show(coordinate).
-         * 如果通过 show(coordinate) 传入了坐标，这里记录下来
-         */
-        Object.defineProperty(this, "_coordinate", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Corresponding DOM element.
-         * 对应的 DOM 元素
-         */
-        Object.defineProperty(this, "_dom", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Whether currently visible.
-         * 当前是否可见
-         */
-        Object.defineProperty(this, "_visible", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
-        /**
-         * Cache event handlers bound to Map for removal on off.
-         * 绑定到 Map 的事件处理缓存，便于 off 时移除
-         */
-        Object.defineProperty(this, "_boundMapHandlers", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: new Map()
-        });
-        /**
-         * SceneRenderer update event handler.
-         * 绑定到 SceneRenderer 的 update 事件处理函数
-         */
-        Object.defineProperty(this, "_sceneRendererUpdateHandler", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        /**
-         * Whether position calculation has been done once (to avoid initial wrong position flicker).
-         * 是否已经完成过一次位置计算（用于避免第一次错误位置闪一下）
-         */
-        Object.defineProperty(this, "_positionedOnce", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: false
-        });
     }
     /**
      * Subclasses optional: For debugging and style distinction.
@@ -485,13 +445,3 @@ export class UIComponent extends EventMixin(BaseMixin(EmptyBase)) {
         this._dom.style.display = "";
     }
 }
-/**
- * Set of "single" components on the same map for mutual exclusion display.
- * 同一张地图上的“single”组件集合，用于互斥显示
- */
-Object.defineProperty(UIComponent, "_singletons", {
-    enumerable: true,
-    configurable: true,
-    writable: true,
-    value: new Set()
-});
