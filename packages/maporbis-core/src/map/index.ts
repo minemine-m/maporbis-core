@@ -105,6 +105,12 @@ export type MapOptions = {
      */
     renderer?: SceneRendererOptions;
     /**
+     * Custom renderer class to use instead of SceneRenderer.
+     * Pass ProSceneRenderer from @maporbis/pro for advanced effects.
+     * 渲染器类，默认 SceneRenderer，可传入 ProSceneRenderer
+     */
+    rendererClass?: typeof SceneRenderer;
+    /**
      * Camera configuration options.
      * 相机配置选项
      */
@@ -472,7 +478,8 @@ export class Map extends Handlerable(
         registerDefaultLoaders();
 
         this.center = this.options.state.center;
-        this.sceneRenderer = new SceneRenderer(container, { ...opts.renderer, map: this });
+        const RendererClass = opts.rendererClass ?? SceneRenderer;
+        this.sceneRenderer = new RendererClass(container, { ...opts.renderer, map: this });
 
         // Default enable shadow
         // 默认开启阴影

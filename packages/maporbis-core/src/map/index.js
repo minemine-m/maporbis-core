@@ -301,7 +301,8 @@ export class Map extends Handlerable(EventMixin(BaseMixin(EmptyClass))) {
         // Register default tile loaders
         registerDefaultLoaders();
         this.center = this.options.state.center;
-        this.sceneRenderer = new SceneRenderer(container, { ...opts.renderer, map: this });
+        const RendererClass = opts.rendererClass ?? SceneRenderer;
+        this.sceneRenderer = new RendererClass(container, { ...opts.renderer, map: this });
         // Default enable shadow
         // 默认开启阴影
         this._rootGroup.receiveShadow = true;

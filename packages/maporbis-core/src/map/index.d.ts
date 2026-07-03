@@ -75,6 +75,12 @@ export type MapOptions = {
      */
     renderer?: SceneRendererOptions;
     /**
+     * Custom renderer class to use instead of SceneRenderer.
+     * Pass ProSceneRenderer from @maporbis/pro for advanced effects.
+     * 渲染器类，默认 SceneRenderer，可传入 ProSceneRenderer
+     */
+    rendererClass?: typeof SceneRenderer;
+    /**
      * Camera configuration options.
      * 相机配置选项
      */
@@ -133,7 +139,7 @@ declare const Map_base: {
         _proxyOptions(): /*elided*/ any;
         _callInitHooks(): /*elided*/ any;
         setOptions(options: import("../core/mixins").ClassOptions): /*elided*/ any;
-        configure(conf?: string | import("../core/mixins").ClassOptions, value?: any): /*elided*/ any | import("../core/mixins").ClassOptions;
+        configure(conf?: string | import("../core/mixins").ClassOptions, value?: any): import("../core/mixins").ClassOptions | /*elided*/ any;
         onOptionsChange(_conf: import("../core/mixins").ClassOptions): void;
         _visitInitHooks(proto: {
             _initHooks: any;
