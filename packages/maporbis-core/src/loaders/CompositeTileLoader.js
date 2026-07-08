@@ -1,4 +1,4 @@
-import { MeshBasicMaterial, PlaneGeometry } from "three";
+import { MeshStandardMaterial, PlaneGeometry } from "three";
 import { TileLoaderFactory } from "./TileLoaderFactory";
 /**
  * 综合瓦片加载器
@@ -110,16 +110,16 @@ export class CompositeTileLoader {
                         loader.unload(evt.target);
                     evt.target.removeEventListener("dispose", disposeHandler);
                 };
-                // MeshBasicMaterial 是 Three.js 内置的，可能不需要特殊卸载逻辑？
+                // MeshStandardMaterial 是 Three.js 内置的，可能不需要特殊卸载逻辑？
                 // 原代码排除了 MeshBasicMaterial。
-                if (!(material instanceof MeshBasicMaterial)) {
+                if (!(material instanceof MeshStandardMaterial)) {
                     material.addEventListener("dispose", disposeHandler);
                 }
                 return material;
             }
             catch (err) {
                 console.error(`[CompositeTileLoader] Material load failed for source ${source.dataType}:`, err);
-                return new MeshBasicMaterial(); // Fallback
+                return new MeshStandardMaterial(); // Fallback
             }
         });
         return Promise.all(materialPromises);

@@ -1,4 +1,4 @@
-import { MeshBasicMaterial } from "three";
+import { MeshStandardMaterial } from "three";
 import { TileLoaderFactory } from "./TileLoaderFactory";
 import { LoaderUtils } from "./LoaderUtils";
 /**
@@ -16,8 +16,8 @@ export class AbstractMaterialLoader {
      */
     async load(context) {
         const { source, x, y, z } = context;
-        // 使用 MeshBasicMaterial 作为默认材质，后续可以扩展为支持自定义材质类
-        const material = new MeshBasicMaterial({
+        // 使用 MeshStandardMaterial 以响应环境光和平行光
+        const material = new MeshStandardMaterial({
             transparent: true,
             // polygonOffset: true, // 根据需求开启
             // polygonOffsetFactor: 1,
