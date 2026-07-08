@@ -265,6 +265,11 @@ export declare class SceneRenderer extends SceneRendererBase {
      */
     set fogFactor(value: number);
     /**
+     * 设置是否自动更新雾效
+     * @param autoUpdate true: 相机移动时自动更新雾效; false: 外部控制雾效
+     */
+    setAutoFogUpdate(autoUpdate: boolean): void;
+    /**
      * 获取容器宽度
      */
     get width(): number;

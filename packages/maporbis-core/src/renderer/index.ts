@@ -279,6 +279,8 @@ export class SceneRenderer extends SceneRendererBase {
   > = new Set();
   /** 雾效因子 */
   private _fogFactor = 1.0;
+  /** 是否自动更新雾效（当外部图层控制雾时设为 false） */
+  private _autoFogUpdate = true;
   private _sceneSize = 50000 * 2;
   /** 地面网格 */
   private _defaultGround: Mesh;
@@ -317,6 +319,14 @@ export class SceneRenderer extends SceneRendererBase {
       type: "change",
       target: this.controls,
     });
+  }
+
+  /**
+   * 设置是否自动更新雾效
+   * @param autoUpdate true: 相机移动时自动更新雾效; false: 外部控制雾效
+   */
+  public setAutoFogUpdate(autoUpdate: boolean): void {
+    this._autoFogUpdate = autoUpdate;
   }
 
   /**
@@ -742,7 +752,7 @@ export class SceneRenderer extends SceneRendererBase {
           this.camera.updateProjectionMatrix();
         }
 
-      if (this.scene.fog instanceof FogExp2) {
+      if (this._autoFogUpdate && this.scene.fog instanceof FogExp2) {
         // this.scene.fog.density = (polar / (dist + 5)) * this.fogFactor * 0.375;
         this.scene.fog.density = (polar / (dist + 5)) * this.fogFactor * 0.1;
       }
