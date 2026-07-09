@@ -230,7 +230,7 @@ export class Map extends Handlerable(EventMixin(BaseMixin(EmptyClass))) {
      * 缩放时相机允许的最近/最远距离（用于映射）
      */
     _minZoomDistance = 500;
-    _maxZoomDistance = 80000;
+    _maxZoomDistance = 40000000;
     /**
      * Whether currently in zoom interaction.
      * 当前是否处于缩放交互中

@@ -397,7 +397,7 @@ export class Map extends Handlerable(
      * 缩放时相机允许的最近/最远距离（用于映射）
      */
     private _minZoomDistance: number = 500;
-    private _maxZoomDistance: number = 80000;
+    private _maxZoomDistance: number = 40000000;
     /**
      * Whether currently in zoom interaction.
      * 当前是否处于缩放交互中

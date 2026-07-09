@@ -395,7 +395,7 @@ export class SceneRenderer extends SceneRendererBase {
         // controls.target.set(0, 0, -3e3);
         controls.screenSpacePanning = false;
         controls.minDistance = minDistance ?? 0.1;
-        controls.maxDistance = maxDistance ?? 60000;
+        controls.maxDistance = maxDistance ?? 40000000;
         controls.maxPolarAngle = MAX_POLAR_ANGLE;
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
@@ -405,14 +405,15 @@ export class SceneRenderer extends SceneRendererBase {
             const polar = Math.max(controls.getPolarAngle(), 0.1);
             const dist = Math.max(controls.getDistance(), 100);
             controls.zoomSpeed = Math.max(Math.log(dist / 1e3), 1) + 3;
-            const maxFar = 300000 * 2;
+            const maxFar = Math.max(controls.maxDistance * 2, 300000 * 2);
             if (controls.maxDistance > maxFar * 0.95)
                 controls.maxDistance = maxFar * 0.95;
             this.camera.far = MathUtils.clamp((dist / polar) * 8, 100, maxFar);
             // 动态调整 near 平面，避免在大场景下因 near 过小导致的 Z-fighting
             // WebGPU 下 logarithmicDepthBuffer 可能未完全生效，需通过优化视锥体范围来保证精度
             // 优化：增加阈值判断，避免每帧频繁更新 ProjectionMatrix 导致 WebGPU 下的抖动
-            const newNear = Math.max(0.1, dist / 100);
+            // 使用对数分布计算 near，避免大距离时 near 过大
+            const newNear = Math.max(0.1, Math.min(dist / 100, dist * 0.001));
             if (Math.abs(this.camera.near - newNear) > newNear * 0.1) {
                 this.camera.near = newNear;
                 this.camera.updateProjectionMatrix();
