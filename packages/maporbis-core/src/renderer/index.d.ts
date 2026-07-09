@@ -239,6 +239,8 @@ export declare class SceneRenderer extends SceneRendererBase {
     private _animationCallbacks;
     /** 雾效因子 */
     private _fogFactor;
+    /** 是否自动更新雾效（当外部图层控制雾时设为 false） */
+    private _autoFogUpdate;
     private _sceneSize;
     /** 地面网格 */
     private _defaultGround;
