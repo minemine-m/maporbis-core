@@ -18,6 +18,24 @@ import { ICompositeLoader } from "../../loaders";
 import { createChildren, getDistance, getTileSize, LODAction, LODEvaluate } from "./util";
 
 const THREADSNUM = 10;
+const MAX_RETRY_COUNT = 3;
+
+/**
+ * Tile state machine enumeration
+ * 瓦片状态机枚举
+ */
+export enum TileState {
+	/** Initial state, not yet started loading 初始状态，尚未开始加载 */
+	Idle = "idle",
+	/** Currently loading data 正在加载数据 */
+	Loading = "loading",
+	/** Data loaded successfully 数据加载成功 */
+	Loaded = "loaded",
+	/** Loading failed 加载失败 */
+	Error = "error",
+	/** Tile disposed/unloaded 瓦片已释放/卸载 */
+	Unloaded = "unloaded",
+}
 
 /**
  * Tile update parameters
@@ -71,6 +89,73 @@ export class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
 	private static _activeDownloads = 0;
 	// Data mode switch 数据模式开关
 	private _dataMode: boolean = false;
+
+	/** Tile state 瓦片状态 */
+	private _state: TileState = TileState.Idle;
+	/** Retry count for failed loads 加载失败重试计数 */
+	private _retryCount: number = 0;
+	/** Maximum retry count 最大重试次数 */
+	private _maxRetries: number = MAX_RETRY_COUNT;
+
+	/**
+	 * Get current tile state
+	 * 获取当前瓦片状态
+	 */
+	public get state(): TileState {
+		return this._state;
+	}
+
+	/**
+	 * Get retry count
+	 * 获取重试次数
+	 */
+	public get retryCount(): number {
+		return this._retryCount;
+	}
+
+	/**
+	 * Set max retry count
+	 * 设置最大重试次数
+	 */
+	public set maxRetries(value: number) {
+		this._maxRetries = value;
+	}
+
+	/**
+	 * Transition tile state
+	 * 转换瓦片状态
+	 * @param newState - Target state 目标状态
+	 * @returns true if transition succeeded 状态转换是否成功
+	 */
+	private _transitionTo(newState: TileState): boolean {
+		const oldState = this._state;
+		this._state = newState;
+
+		// Sync backward-compatible flags 同步向后兼容的标志位
+		if (newState === TileState.Loaded) {
+			this._isLoaded = true;
+		} else if (newState === TileState.Idle || newState === TileState.Loading) {
+			this._isLoaded = false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if tile can start loading
+	 * 检查瓦片是否可以开始加载
+	 */
+	private _canStartLoading(): boolean {
+		return this._state === TileState.Idle || this._state === TileState.Error;
+	}
+
+	/**
+	 * Check if tile needs retry
+	 * 检查瓦片是否需要重试
+	 */
+	private _needsRetry(): boolean {
+		return this._state === TileState.Error && this._retryCount < this._maxRetries;
+	}
 	/** Vector Data 矢量数据 */
 	public _vectorData: any = null;
 	/**
@@ -326,18 +411,27 @@ export class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
 	}
 
 	/**
-	 * Asynchronously load tile data
+	 * Asynchronously load tile data with state machine and retry support
+	 * 异步加载瓦片数据，支持状态机和重试
 	 *
 	 * @param loader Tile loader
 	 * @returns this
 	 */
 	private async _loadData(loader: ICompositeLoader): Promise<Tile> {
+		// Check if tile can start loading 检查瓦片是否可以开始加载
+		if (!this._canStartLoading()) {
+			return this;
+		}
+
+		// Transition to Loading state 转换到 Loading 状态
+		this._transitionTo(TileState.Loading);
 		Tile._activeDownloads++;
+
 		const { x, y, z } = this;
 
-		// 如果是数据模式，只获取数据不创建Mesh
-		if (this._dataMode) {
-			try {
+		try {
+			// 如果是数据模式，只获取数据不创建Mesh
+			if (this._dataMode) {
 				// 调用加载器获取数据
 				const meshData = await loader.load({
 					x, y, z,
@@ -345,39 +439,50 @@ export class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
 				});
 				(this as any)._vectorData = (meshData as any).geometry?.userData || {};
 
-				this._isLoaded = true;
+				// Transition to Loaded state 转换到 Loaded 状态
+				this._transitionTo(TileState.Loaded);
+				this._retryCount = 0; // Reset retry count on success 成功后重置重试计数
+
 				// 触发数据加载事件
 				this.dispatchEvent({
 					type: "vector-data-loaded",
 					data: (this as any)._vectorData,
 					tile: this
 				});
+			} else {
+				const meshData = await loader.load({
+					x,
+					y,
+					z,
+					bounds: [-Infinity, -Infinity, Infinity, Infinity],
+				});
+				this.material = meshData.materials;
+				this.geometry = meshData.geometry;
+				this.maxZ = this.geometry.boundingBox?.max.z || 0;
 
-			} catch (error) {
-				console.error(`数据模式加载失败 ${z}/${x}/${y}:`, error);
-				this._isLoaded = false;
+				// Transition to Loaded state 转换到 Loaded 状态
+				this._transitionTo(TileState.Loaded);
+				this._retryCount = 0; // Reset retry count on success 成功后重置重试计数
 			}
-		}
-		else {
-			const meshData = await loader.load({
-				x,
-				y,
-				z,
-				bounds: [-Infinity, -Infinity, Infinity, Infinity],
-			});
-			this.material = meshData.materials;
-			// this.material = [new MeshPhongMaterial({
-			// 	color: 0xFF0000,
-			// 	flatShading: true,
-			// 	side: DoubleSide,
-			// })];
-			this.geometry = meshData.geometry;
-			this.maxZ = this.geometry.boundingBox?.max.z || 0;
-			this._isLoaded = true;
+		} catch (error) {
+			console.error(`Tile load failed ${z}/${x}/${y} (attempt ${this._retryCount + 1}/${this._maxRetries}):`, error);
+
+			// Transition to Error state 转换到 Error 状态
+			this._transitionTo(TileState.Error);
+			this._retryCount++;
+
+			// Auto retry if within retry limit 如果在重试次数限制内，自动重试
+			if (this._needsRetry()) {
+				Tile._activeDownloads--;
+				// Exponential backoff: 100ms, 200ms, 400ms 指数退避
+				const delay = Math.min(100 * Math.pow(2, this._retryCount - 1), 2000);
+				await new Promise(resolve => setTimeout(resolve, delay));
+				return this._loadData(loader);
+			}
+		} finally {
+			Tile._activeDownloads--;
 		}
 
-		Tile._activeDownloads--;
-		// this._checkVisibility();
 		return this;
 	}
 
@@ -527,6 +632,8 @@ export class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
 
 	private _disposeResources(disposeSelf: boolean, loader: ICompositeLoader) {
 		if (disposeSelf && this.isTile && !this.isDummy) {
+			// Transition to Unloaded state 转换到 Unloaded 状态
+			this._transitionTo(TileState.Unloaded);
 			this.dispatchEvent({ type: "unload" });
 			loader?.unload?.(this);
 		}

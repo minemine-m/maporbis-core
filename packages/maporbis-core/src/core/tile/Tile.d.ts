@@ -2,6 +2,22 @@ import { BaseEvent, BufferGeometry, Camera, Intersection, Material, Mesh, Object
 import { ICompositeLoader } from "../../loaders";
 import { LODAction } from "./util";
 /**
+ * Tile state machine enumeration
+ * 瓦片状态机枚举
+ */
+export declare enum TileState {
+    /** Initial state, not yet started loading 初始状态，尚未开始加载 */
+    Idle = "idle",
+    /** Currently loading data 正在加载数据 */
+    Loading = "loading",
+    /** Data loaded successfully 数据加载成功 */
+    Loaded = "loaded",
+    /** Loading failed 加载失败 */
+    Error = "error",
+    /** Tile disposed/unloaded 瓦片已释放/卸载 */
+    Unloaded = "unloaded"
+}
+/**
  * Tile update parameters
  */
 export type TileUpdateParams = {
@@ -67,6 +83,44 @@ export interface ITileEventMap extends Object3DEventMap {
 export declare class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
     private static _activeDownloads;
     private _dataMode;
+    /** Tile state 瓦片状态 */
+    private _state;
+    /** Retry count for failed loads 加载失败重试计数 */
+    private _retryCount;
+    /** Maximum retry count 最大重试次数 */
+    private _maxRetries;
+    /**
+     * Get current tile state
+     * 获取当前瓦片状态
+     */
+    get state(): TileState;
+    /**
+     * Get retry count
+     * 获取重试次数
+     */
+    get retryCount(): number;
+    /**
+     * Set max retry count
+     * 设置最大重试次数
+     */
+    set maxRetries(value: number);
+    /**
+     * Transition tile state
+     * 转换瓦片状态
+     * @param newState - Target state 目标状态
+     * @returns true if transition succeeded 状态转换是否成功
+     */
+    private _transitionTo;
+    /**
+     * Check if tile can start loading
+     * 检查瓦片是否可以开始加载
+     */
+    private _canStartLoading;
+    /**
+     * Check if tile needs retry
+     * 检查瓦片是否需要重试
+     */
+    private _needsRetry;
     /** Vector Data 矢量数据 */
     _vectorData: any;
     /**
@@ -199,7 +253,8 @@ export declare class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap
      */
     private _checkVisibility;
     /**
-     * Asynchronously load tile data
+     * Asynchronously load tile data with state machine and retry support
+     * 异步加载瓦片数据，支持状态机和重试
      *
      * @param loader Tile loader
      * @returns this

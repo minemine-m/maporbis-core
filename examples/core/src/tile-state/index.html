@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tile State Machine - MapOrbis</title>
+    <link rel="stylesheet" href="../../../shared/styles/orbisstyle.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      html, body, #map {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      .state-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 380px;
+        max-height: calc(100vh - 40px);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+      }
+      .state-panel .orbis-panel {
+        overflow: visible;
+        background: #ffffff;
+        border: 1px solid #dadce0;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        border-radius: 12px;
+      }
+      .state-panel .orbis-panel-header {
+        background: #f8f9fa;
+        border-bottom: 1px solid #dadce0;
+        padding: 14px 16px;
+        border-radius: 12px 12px 0 0;
+      }
+      .state-panel .orbis-panel-body {
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+        padding: 14px;
+        gap: 12px;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        border-radius: 0 0 12px 12px;
+        max-height: calc(100vh - 120px);
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 12px;
+      }
+      .stat-item {
+        text-align: center;
+        padding: 16px;
+        background: #ffffff;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.07);
+      }
+      .stat-value { font-size: 26px; font-weight: 700; color: #1a73e8; }
+      .stat-label { font-size: 11px; color: #6c757d; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+      .log-area {
+        background: #212529;
+        color: #dee2e6;
+        padding: 14px;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 11px;
+        height: 150px;
+        overflow-y: auto;
+        line-height: 1.6;
+        border: 1px solid #343a40;
+      }
+      .log-entry { margin: 2px 0; padding: 4px 8px; border-radius: 4px; }
+      .log-entry:hover { background: rgba(255,255,255,0.08); }
+      .log-time { color: #868e96; }
+      .log-idle { color: #adb5bd; }
+      .log-loading { color: #fcc419; }
+      .log-loaded { color: #20c997; }
+      .log-error { color: #ff6b6b; }
+      .log-unloaded { color: #868e96; }
+      .btn-group { display: flex; gap: 12px; margin-top: 12px; }
+      .btn-sm { flex: 1; padding: 14px 18px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+      .orbis-btn-primary { background: #1a73e8; color: white; }
+      .orbis-btn-primary:hover { background: #1557b0; box-shadow: 0 2px 8px rgba(26,115,232,0.3); }
+      .orbis-btn-secondary { background: #6c757d; color: white; }
+      .orbis-btn-secondary:hover { background: #5a6268; box-shadow: 0 2px 8px rgba(108,117,125,0.3); }
+    </style>
+  </head>
+  <body class="orbis-body">
+    <div id="map"></div>
+
+    <div class="state-panel">
+      <div class="orbis-panel orbis-shadow-lg">
+        <div class="orbis-panel-header">
+          <h3 style="margin: 0; font-size: 15px; font-weight: 600;">
+            <i class="fas fa-tile" style="color: #1a73e8"></i>
+            Tile State Machine
+          </h3>
+        </div>
+        <div class="orbis-panel-body">
+          <!-- Stats -->
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="statIdle">0</div>
+              <div class="stat-label">Idle</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="statLoading" style="color: #ffc107">0</div>
+              <div class="stat-label">Loading</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="statLoaded" style="color: #28a745">0</div>
+              <div class="stat-label">Loaded</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="statError" style="color: #dc3545">0</div>
+              <div class="stat-label">Error</div>
+            </div>
+          </div>
+
+          <!-- Event Log -->
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 10px;">
+            <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #333;">
+              <i class="fas fa-terminal"></i> Event Log
+            </div>
+            <div class="log-area" id="logArea"></div>
+          </div>
+
+          <!-- Controls -->
+          <div class="btn-group">
+            <button class="orbis-btn orbis-btn-primary btn-sm" id="btnClearLog">
+              <i class="fas fa-trash"></i> Clear Log
+            </button>
+            <button class="orbis-btn orbis-btn-secondary btn-sm" id="btnFreeze">
+              <i class="fas fa-pause"></i> Freeze
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.171.0/build/three.module.js"
+        }
+      }
+    </script>
+
+    <script src="/utils/inline-utils.js"></script>
+
+    <script type="module">
+      import * as maporbis from "@maporbis/core";
+
+      const tileStates = new Map();
+      let frozen = false;
+      const MAX_LOG_ENTRIES = 200;
+
+      const logArea = document.getElementById("logArea");
+      const statIdle = document.getElementById("statIdle");
+      const statLoading = document.getElementById("statLoading");
+      const statLoaded = document.getElementById("statLoaded");
+      const statError = document.getElementById("statError");
+
+      function addLog(msg, level = "idle") {
+        if (frozen) return;
+        const time = new Date().toLocaleTimeString("en-US", { hour12: false });
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${level}">${msg}</span>`;
+        logArea.appendChild(entry);
+        while (logArea.children.length > MAX_LOG_ENTRIES) {
+          logArea.removeChild(logArea.firstChild);
+        }
+        logArea.scrollTop = logArea.scrollHeight;
+      }
+
+      function updateStats() {
+        const counts = { idle: 0, loading: 0, loaded: 0, error: 0, unloaded: 0 };
+        for (const info of tileStates.values()) {
+          counts[info.state] = (counts[info.state] || 0) + 1;
+        }
+        statIdle.textContent = counts.idle;
+        statLoading.textContent = counts.loading;
+        statLoaded.textContent = counts.loaded;
+        statError.textContent = counts.error;
+      }
+
+      function inferState(tile) {
+        if (!tile.isTile) return null;
+        if (tile.state !== undefined) {
+          const stateMap = { 'idle': 'idle', 'loading': 'loading', 'loaded': 'loaded', 'error': 'error', 'unloaded': 'unloaded' };
+          return stateMap[tile.state] || 'idle';
+        }
+        if (tile.loaded) return 'loaded';
+        return 'idle';
+      }
+
+      const map = new maporbis.Map("map", {
+        state: { center: [116.4, 39.9, 2000] },
+        source: {
+          minLevel: 2,
+          maxLevel: 19,
+          baseLayers: [
+            new maporbis.WMTSTileLayer("esri_imagery", {
+              source: new maporbis.TileSource({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                projectionID: "3857",
+              }),
+              projection: maporbis.ProjectionFactory.create("3857"),
+              opacity: 1.0,
+              visible: true,
+              altitude: 1,
+            }),
+          ],
+        },
+        renderer: {
+          stats: true,
+          antialias: true,
+          skybox: {
+            hdr: "https://threejs.org/examples/textures/equirectangular/venice_sunset_1k.hdr",
+            hdrExposure: 1,
+            defaultColor: "#B9D4FE",
+          },
+          minDistance: 0.1,
+          maxDistance: 40000000,
+          defaultGround: { enabled: false, visible: true, color: "#ff0000", opacity: 1 },
+        },
+        camera: { pitch: 75, bearing: 0 },
+      });
+
+      console.log("Map:", map);
+      addLog("Map initialized", "loaded");
+
+      // Debug: log map properties
+      console.log("Map.sceneRenderer:", map.sceneRenderer);
+      console.log("Map.sceneRenderer.scene:", map.sceneRenderer?.scene);
+
+      // Log scene structure every second
+      let lastLogTime = 0;
+      function logSceneStructure(scene) {
+        const now = Date.now();
+        if (now - lastLogTime < 1000) return;
+        lastLogTime = now;
+
+        let tileCount = 0;
+        let totalObjects = 0;
+        const tileNames = [];
+        scene.traverse((obj) => {
+          totalObjects++;
+          if (obj.isTile) {
+            tileCount++;
+            if (tileCount <= 5) {
+              tileNames.push(`${obj.name}: state=${obj.state}, loaded=${obj.loaded}`);
+            }
+          }
+        });
+
+        const msg = `Scene: ${totalObjects} objects, ${tileCount} tiles`;
+        console.log(msg);
+        if (tileCount > 0) {
+          console.log("Sample tiles:", tileNames);
+        }
+        addLog(msg, tileCount > 0 ? "loaded" : "idle");
+      }
+
+      // Start animation loop
+      let frameCount = 0;
+      function animate() {
+        requestAnimationFrame(animate);
+        frameCount++;
+
+        const scene = map.sceneRenderer?.scene;
+        if (!scene) {
+          if (frameCount % 60 === 0) console.log("No scene yet");
+          return;
+        }
+
+        logSceneStructure(scene);
+
+        // Poll tiles
+        scene.traverse((obj) => {
+          if (!obj.isTile) return;
+          const key = `${obj.z}-${obj.x}-${obj.y}`;
+          const currentState = inferState(obj);
+          if (!currentState) return;
+
+          const oldInfo = tileStates.get(key);
+          const oldState = oldInfo ? oldInfo.state : null;
+
+          if (oldState !== currentState || !oldInfo) {
+            tileStates.set(key, { state: currentState, name: obj.name || key });
+            if (oldState) {
+              addLog(`${obj.name}: ${currentState} ← ${oldState}`, currentState);
+            }
+          }
+        });
+
+        updateStats();
+      }
+      animate();
+
+      document.getElementById("btnClearLog").addEventListener("click", () => {
+        logArea.innerHTML = "";
+        addLog("Log cleared", "idle");
+      });
+
+      document.getElementById("btnFreeze").addEventListener("click", function() {
+        frozen = !frozen;
+        this.innerHTML = frozen
+          ? '<i class="fas fa-play"></i> Resume'
+          : '<i class="fas fa-pause"></i> Freeze';
+        this.classList.toggle("orbis-btn-primary", !frozen);
+        this.classList.toggle("orbis-btn-secondary", frozen);
+        addLog(frozen ? "Log frozen" : "Log resumed", "idle");
+      });
+    </script>
+  </body>
+</html>
