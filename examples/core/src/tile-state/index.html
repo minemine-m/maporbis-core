@@ -128,6 +128,31 @@
             </div>
           </div>
 
+          <!-- Cache Stats -->
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 10px;">
+            <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #333;">
+              <i class="fas fa-database"></i> LRU Cache
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px;">
+              <div style="text-align: center;">
+                <div id="cacheSize" style="font-size: 18px; font-weight: 700; color: #1a73e8;">0</div>
+                <div style="color: #6c757d;">Size</div>
+              </div>
+              <div style="text-align: center;">
+                <div id="cacheHits" style="font-size: 18px; font-weight: 700; color: #28a745;">0</div>
+                <div style="color: #6c757d;">Hits</div>
+              </div>
+              <div style="text-align: center;">
+                <div id="cacheMisses" style="font-size: 18px; font-weight: 700; color: #dc3545;">0</div>
+                <div style="color: #6c757d;">Misses</div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 6px; font-size: 12px;">
+              <span style="color: #6c757d;">Hit Rate: </span>
+              <span id="cacheHitRate" style="font-weight: 600; color: #1a73e8;">0%</span>
+            </div>
+          </div>
+
           <!-- Event Log -->
           <div style="background: #f8f9fa; border-radius: 8px; padding: 10px;">
             <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #333;">
@@ -171,6 +196,10 @@
       const statLoading = document.getElementById("statLoading");
       const statLoaded = document.getElementById("statLoaded");
       const statError = document.getElementById("statError");
+      const cacheSizeEl = document.getElementById("cacheSize");
+      const cacheHitsEl = document.getElementById("cacheHits");
+      const cacheMissesEl = document.getElementById("cacheMisses");
+      const cacheHitRateEl = document.getElementById("cacheHitRate");
 
       function addLog(msg, level = "idle") {
         if (frozen) return;
@@ -242,6 +271,15 @@
       console.log("Map:", map);
       addLog("Map initialized", "loaded");
 
+      // LRU cache is automatically enabled in CompositeTileLoader
+      const layers = map.getLayers();
+      for (const layer of layers) {
+        if (layer.isTileLayer && layer.loader) {
+          console.log("Layer:", layer.getId(), "cache:", layer.loader.cache);
+          addLog("LRU Cache active (512 tiles)", "loaded");
+        }
+      }
+
       // Debug: log map properties
       console.log("Map.sceneRenderer:", map.sceneRenderer);
       console.log("Map.sceneRenderer.scene:", map.sceneRenderer?.scene);
@@ -307,6 +345,15 @@
         });
 
         updateStats();
+
+        // Update cache stats
+        const cache = layers.find(l => l.isTileLayer && l.loader?.cache)?.loader?.cache;
+        if (cache) {
+          cacheSizeEl.textContent = cache.size;
+          cacheHitsEl.textContent = cache.hits;
+          cacheMissesEl.textContent = cache.misses;
+          cacheHitRateEl.textContent = Math.round(cache.hitRate * 100) + "%";
+        }
       }
       animate();
 

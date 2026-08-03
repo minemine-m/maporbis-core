@@ -2,6 +2,7 @@ import { BufferGeometry, Event, Material, Mesh, MeshStandardMaterial, PlaneGeome
 import { ISource } from "../sources";
 import { ICompositeLoader, TileLoadContext, TileMeshData } from "./LoaderInterfaces";
 import { TileLoaderFactory } from "./TileLoaderFactory";
+import { TileCache } from "./TileCache";
 
 /**
  * 综合瓦片加载器
@@ -13,7 +14,20 @@ export class CompositeTileLoader implements ICompositeLoader {
     private _demSource: ISource | undefined;
     private _vtSource: ISource | undefined;
 
+    /** Tile cache for avoiding re-fetching 瓦片缓存，避免重复请求 */
+    public cache: TileCache;
+
     public manager = TileLoaderFactory.manager;
+
+    constructor(maxCacheSize: number = 512) {
+        this.cache = new TileCache(maxCacheSize);
+    }
+
+    /** Disable cache 禁用缓存 */
+    public disableCache(): void {
+        this.cache.clear();
+        this.cache = null as any;
+    }
 
     // #region Accessors
     
@@ -45,6 +59,16 @@ export class CompositeTileLoader implements ICompositeLoader {
      * @param context 加载上下文
      */
     public async load(context: TileLoadContext): Promise<TileMeshData> {
+        const { z, x, y } = context;
+
+        // Check cache first 先检查缓存
+        if (this.cache) {
+            const cached = this.cache.get(z, x, y);
+            if (cached) {
+                return cached;
+            }
+        }
+
         const [geometry, materials] = await Promise.all([
             this.loadGeometry(context),
             this.loadMaterials(context)
@@ -52,18 +76,13 @@ export class CompositeTileLoader implements ICompositeLoader {
 
         if (geometry && materials) {
             // 为每个材质添加几何体组 (Group)
-            // 这允许几何体使用多个材质 (Multi-material)
-            // 但对于地形瓦片，通常是一个 PlaneGeometry，这里似乎是将整个几何体分配给每个材质？
-            // 原代码逻辑: geometry.addGroup(0, Infinity, i);
-            // 这意味着整个几何体被渲染多次？或者只是为了分配材质索引？
-            // Three.js 中，如果 geometry 有 groups，则 material 可以是数组。
-            // 每个 group 对应 material 数组中的一个材质。
-            // 如果 groups 重叠 (0 to Infinity)，则会重复渲染。
-            // 地形叠加层通常使用 Multi-texture shader 或多重 Pass。
-            // 这里原代码似乎是简单的叠加渲染 (Multiple Draw Calls via Groups)。
-            
             for (let i = 0; i < materials.length; i++) {
                 geometry.addGroup(0, Infinity, i);
+            }
+
+            // Store in cache 存入缓存
+            if (this.cache) {
+                this.cache.set(z, x, y, { geometry, materials });
             }
         }
 
