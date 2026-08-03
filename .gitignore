@@ -7,6 +7,10 @@ dist/
 build/
 *.tsbuildinfo
 
+# Generated JS/DTS files in src
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+
 # IDE
 .idea/
 .vscode/
