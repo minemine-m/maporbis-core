@@ -6,6 +6,8 @@ export * from "./CompositeTileLoader";
 export * from "./LoaderInterfaces";
 export * from "./LoaderUtils";
 export * from "./MapboxRGBLoader";
+export * from "./RetryLoader";
+export * from "./TileCache";
 export * from "./TileLoaderFactory";
 export * from "./WebImageLoader";
 export * from "./registerDefaultLoaders";

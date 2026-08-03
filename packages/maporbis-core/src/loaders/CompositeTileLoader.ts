@@ -3,6 +3,7 @@ import { ISource } from "../sources";
 import { ICompositeLoader, TileLoadContext, TileMeshData } from "./LoaderInterfaces";
 import { TileLoaderFactory } from "./TileLoaderFactory";
 import { TileCache } from "./TileCache";
+import { RetryLoader, RetryOptions } from "./RetryLoader";
 
 /**
  * 综合瓦片加载器
@@ -17,10 +18,27 @@ export class CompositeTileLoader implements ICompositeLoader {
     /** Tile cache for avoiding re-fetching 瓦片缓存，避免重复请求 */
     public cache: TileCache;
 
+    /** Retry configuration 重试配置 */
+    private _retryOptions: RetryOptions = {
+        maxRetries: 2,
+        baseDelay: 100,
+        maxDelay: 2000
+    };
+
     public manager = TileLoaderFactory.manager;
 
     constructor(maxCacheSize: number = 512) {
         this.cache = new TileCache(maxCacheSize);
+    }
+
+    /** Set retry options 设置重试选项 */
+    public setRetryOptions(options: RetryOptions): void {
+        this._retryOptions = { ...this._retryOptions, ...options };
+    }
+
+    /** Get retry options 获取重试选项 */
+    public getRetryOptions(): Readonly<RetryOptions> {
+        return this._retryOptions;
     }
 
     /** Disable cache 禁用缓存 */
@@ -144,23 +162,28 @@ export class CompositeTileLoader implements ICompositeLoader {
         // 并行加载所有材质
         const materialPromises = validSources.map(async source => {
             const loader = TileLoaderFactory.getMaterialLoader(source);
-            
-            try {
-                const material = await loader.load({ source, ...context });
-                
-                // 自动资源管理
-                const disposeHandler = (evt: Event) => {
-                    if (loader.unload) loader.unload(evt.target as Material);
-                    (evt.target as any).removeEventListener("dispose", disposeHandler);
-                };
-                
-                // MeshStandardMaterial 是 Three.js 内置的，可能不需要特殊卸载逻辑？
-                // 原代码排除了 MeshBasicMaterial。
-                if (!(material instanceof MeshStandardMaterial)) {
-                    material.addEventListener("dispose", disposeHandler);
-                }
 
-                return material;
+            const loadWithRetry = new RetryLoader<Material>(
+                async (ctx) => {
+                    const material = await loader.load({ source, ...ctx });
+
+                    // 自动资源管理
+                    const disposeHandler = (evt: Event) => {
+                        if (loader.unload) loader.unload(evt.target as Material);
+                        (evt.target as any).removeEventListener("dispose", disposeHandler);
+                    };
+
+                    if (!(material instanceof MeshStandardMaterial)) {
+                        material.addEventListener("dispose", disposeHandler);
+                    }
+
+                    return material;
+                },
+                this._retryOptions
+            );
+
+            try {
+                return await loadWithRetry.load(context);
             } catch (err) {
                 console.error(`[CompositeTileLoader] Material load failed for source ${source.dataType}:`, err);
                 return new MeshStandardMaterial(); // Fallback
@@ -171,15 +194,22 @@ export class CompositeTileLoader implements ICompositeLoader {
     }
 
     private async loadFromSource(source: ISource, context: TileLoadContext, loader: any): Promise<BufferGeometry> {
+        const loadWithRetry = new RetryLoader<BufferGeometry>(
+            async (ctx) => {
+                const geometry = await loader.load({ source, ...ctx });
+
+                // 自动资源管理
+                geometry.addEventListener("dispose", () => {
+                    if (loader.unload) loader.unload(geometry);
+                });
+
+                return geometry;
+            },
+            this._retryOptions
+        );
+
         try {
-            const geometry = await loader.load({ source, ...context });
-            
-            // 自动资源管理
-            geometry.addEventListener("dispose", () => {
-                if (loader.unload) loader.unload(geometry);
-            });
-            
-            return geometry;
+            return await loadWithRetry.load(context);
         } catch (err) {
             console.error(`[CompositeTileLoader] Geometry load failed for source ${source.dataType}:`, err);
             return new PlaneGeometry(); // Fallback
