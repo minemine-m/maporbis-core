@@ -17,7 +17,6 @@ import {
 import { ICompositeLoader } from "../../loaders";
 import { createChildren, getDistance, getTileSize, LODAction, LODEvaluate } from "./util";
 
-const THREADSNUM = 10;
 const MAX_RETRY_COUNT = 3;
 
 /**
@@ -87,6 +86,7 @@ const frustum = new Frustum();
  */
 export class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
 	private static _activeDownloads = 0;
+	private static _maxConcurrentDownloads = 10;
 	// Data mode switch 数据模式开关
 	private _dataMode: boolean = false;
 
@@ -190,6 +190,22 @@ export class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
 	 */
 	public static get downloadThreads() {
 		return Tile._activeDownloads;
+	}
+
+	/**
+	 * Get max concurrent downloads.
+	 * 获取最大并发下载数
+	 */
+	public static get maxConcurrentDownloads(): number {
+		return Tile._maxConcurrentDownloads;
+	}
+
+	/**
+	 * Set max concurrent downloads.
+	 * 设置最大并发下载数
+	 */
+	public static set maxConcurrentDownloads(value: number) {
+		Tile._maxConcurrentDownloads = Math.max(1, value);
 	}
 
 	/** Coordinate of tile 瓦片坐标 */
@@ -382,7 +398,7 @@ export class Tile extends Mesh<BufferGeometry, Material[], ITileEventMap> {
 	 * @returns this
 	 */
 	protected _updateLOD(params: TileUpdateParams) {
-		if (Tile.downloadThreads > THREADSNUM) {
+		if (Tile.downloadThreads >= Tile._maxConcurrentDownloads) {
 			return { action: LODAction.none };
 		}
 		let newTiles: Tile[] = [];
